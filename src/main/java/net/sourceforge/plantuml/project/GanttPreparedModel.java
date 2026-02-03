@@ -93,7 +93,7 @@ import net.sourceforge.plantuml.style.ISkinParam;
 import net.sourceforge.plantuml.style.SName;
 
 public class GanttPreparedModel
-		implements ToTaskDraw, DayCalendar, DisplayConfig, TimelineStyle, VerticalSeparators, TaskDrawRegistry {
+		implements ToTaskDraw, DisplayConfig, TimelineStyle, VerticalSeparators, TaskDrawRegistry {
 
 	// ========================================================================
 	// Value objects
@@ -157,60 +157,6 @@ public class GanttPreparedModel
 		this.ganttStyle = ganttStyle;
 		this.skinParam = skinParam;
 		this.timelineStyle = new TimelineStyleData(ganttStyle, HColorSet.instance());
-	}
-
-	@Override
-	public boolean isOpen(LocalDate day) {
-		return dayCalendar.isOpen(day);
-	}
-
-	@Override
-	public boolean isOpen(TimePoint instant) {
-		return dayCalendar.isOpen(instant);
-	}
-
-	@Override
-	public HColor getDayColor(TimePoint day) {
-		return dayCalendar.getDayColor(day);
-	}
-
-	@Override
-	public HColor getDayOfWeekColor(DayOfWeek dayOfWeek) {
-		return dayCalendar.getDayOfWeekColor(dayOfWeek);
-	}
-
-	@Override
-	public String getDayName(TimePoint day) {
-		return dayCalendar.getDayName(day);
-	}
-
-	@Override
-	public OpenClose getOpenClose() {
-		return dayCalendar.getOpenClose();
-	}
-
-	public Map<TimePoint, HColor> getColorDays() {
-		return dayCalendar.getColorDays();
-	}
-
-	public Map<TimePoint, String> getNameDays() {
-		return dayCalendar.getNameDays();
-	}
-
-	public void putNameDay(TimePoint day, String name) {
-		dayCalendar.putNameDay(day, name);
-	}
-
-	public void putColorDayToday(TimePoint day, HColor color) {
-		dayCalendar.putColorDayToday(day, color);
-	}
-
-	public void putColorDayInternal(TimePoint day, HColor color) {
-		dayCalendar.putColorDayInternal(day, color);
-	}
-
-	public void putColorDayOfWeek(DayOfWeek dow, HColor color) {
-		dayCalendar.putColorDayOfWeek(dow, color);
 	}
 
 	// ========================================================================
@@ -376,7 +322,7 @@ public class GanttPreparedModel
 	public TimeScale daily() {
 		return getScaleConfig().isHideClosed()
 				? new TimeScaleDailyHideClosed(getCellWidth(), TimePoint.ofStartOfDay(getTimeBounds().getMinDay()),
-						getScaleConfig().getEffectiveScale(), getOpenClose())
+						getScaleConfig().getEffectiveScale(), getDayCalendar().getOpenClose())
 				: new TimeScaleDaily(getCellWidth(), TimePoint.ofStartOfDay(getTimeBounds().getMinDay()),
 						getScaleConfig().getEffectiveScale(), getTimeBounds().getPrintStart());
 	}

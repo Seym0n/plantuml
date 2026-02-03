@@ -70,11 +70,11 @@ public abstract class TimeHeader {
 	}
 
 	public HColor getColor(TimePoint wink) {
-		return model.getDayColor(wink);
+		return model.getDayCalendar().getDayColor(wink);
 	}
 
 	public HColor getColor(DayOfWeek dayOfWeek) {
-		return model.getDayOfWeekColor(dayOfWeek);
+		return model.getDayCalendar().getDayOfWeekColor(dayOfWeek);
 	}
 
 	protected final boolean isBold2(TimePoint wink) {

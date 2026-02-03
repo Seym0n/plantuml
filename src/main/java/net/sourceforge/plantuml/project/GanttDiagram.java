@@ -201,11 +201,11 @@ public class GanttDiagram extends TitledDiagram implements ToTaskDraw, WithSprit
 			}
 		}
 
-		for (TimePoint d : model.getColorDays().keySet())
+		for (TimePoint d : model.getDayCalendar().getColorDays().keySet())
 			if (d.toDay().compareTo(model.getTimeBounds().getMaxDay()) > 0)
 				model.getTimeBounds().setMaxDay(d.toDay());
 
-		for (TimePoint d : model.getNameDays().keySet())
+		for (TimePoint d : model.getDayCalendar().getNameDays().keySet())
 			if (d.toDay().compareTo(model.getTimeBounds().getMaxDay()) > 0)
 				model.getTimeBounds().setMaxDay(d.toDay());
 	}
@@ -227,19 +227,19 @@ public class GanttDiagram extends TitledDiagram implements ToTaskDraw, WithSprit
 	}
 
 	public void closeDayOfWeek(DayOfWeek day, String task) {
-		model.getOpenClose().close(day);
+		model.getDayCalendar().getOpenClose().close(day);
 	}
 
 	public void openDayOfWeek(DayOfWeek day, String task) {
 		if (task.length() == 0)
-			model.getOpenClose().open(day);
+			model.getDayCalendar().getOpenClose().open(day);
 		else
 			getOpenCloseForTask(task).open(day);
 	}
 
 	public void closeDayAsDate(LocalDate day, String task) {
 		if (task.length() == 0)
-			model.getOpenClose().close(day);
+			model.getDayCalendar().getOpenClose().close(day);
 		else
 			getOpenCloseForTask(task).close(day);
 
@@ -247,7 +247,7 @@ public class GanttDiagram extends TitledDiagram implements ToTaskDraw, WithSprit
 
 	public void openDayAsDate(LocalDate day, String task) {
 		if (task.length() == 0)
-			model.getOpenClose().open(day);
+			model.getDayCalendar().getOpenClose().open(day);
 		else
 			getOpenCloseForTask(task).open(day);
 
@@ -264,11 +264,11 @@ public class GanttDiagram extends TitledDiagram implements ToTaskDraw, WithSprit
 
 	public TimePoint getThenDate() {
 		TimePoint result = TimePoint.ofStartOfDay(model.getTimeBounds().getMinDay());
-		for (TimePoint d : model.getColorDays().keySet())
+		for (TimePoint d : model.getDayCalendar().getColorDays().keySet())
 			if (d.compareTo(result) > 0)
 				result = d;
 
-		for (TimePoint d : model.getNameDays().keySet())
+		for (TimePoint d : model.getDayCalendar().getNameDays().keySet())
 			if (d.compareTo(result) > 0)
 				result = d;
 
@@ -311,7 +311,7 @@ public class GanttDiagram extends TitledDiagram implements ToTaskDraw, WithSprit
 	}
 
 	public PiecewiseConstant getLoadPlanableForTask(String taskId) {
-		return model.getOpenClose().mutateMe(this.openCloseForTask.get(taskId)).asPiecewiseConstant();
+		return model.getDayCalendar().getOpenClose().mutateMe(this.openCloseForTask.get(taskId)).asPiecewiseConstant();
 	}
 
 	private Task getLastCreatedTask() {
@@ -380,7 +380,7 @@ public class GanttDiagram extends TitledDiagram implements ToTaskDraw, WithSprit
 	}
 
 	public int daysInWeek() {
-		return model.getOpenClose().daysInWeek();
+		return model.getDayCalendar().getOpenClose().daysInWeek();
 	}
 
 	public int daysInMonth() {
@@ -388,7 +388,7 @@ public class GanttDiagram extends TitledDiagram implements ToTaskDraw, WithSprit
 	}
 
 	public boolean isOpen(LocalDate day) {
-		return model.isOpen(day);
+		return model.getDayCalendar().isOpen(day);
 	}
 
 	public boolean affectResource(Task result, String description) {
@@ -422,7 +422,7 @@ public class GanttDiagram extends TitledDiagram implements ToTaskDraw, WithSprit
 		if (result == null) {
 			TimePoint start = null;
 			TimePoint end = null;
-			for (Map.Entry<TimePoint, String> ent : model.getNameDays().entrySet()) {
+			for (Map.Entry<TimePoint, String> ent : model.getDayCalendar().getNameDays().entrySet()) {
 				if (ent.getValue().equalsIgnoreCase(id) == false)
 					continue;
 
@@ -457,15 +457,15 @@ public class GanttDiagram extends TitledDiagram implements ToTaskDraw, WithSprit
 	}
 
 	public void colorDay(LocalDate day, HColor color) {
-		model.putColorDayInternal(TimePoint.ofStartOfDay(day), color);
+		model.getDayCalendar().putColorDayInternal(TimePoint.ofStartOfDay(day), color);
 	}
 
 	public void colorDay(DayOfWeek day, HColor color) {
-		model.putColorDayOfWeek(day, color);
+		model.getDayCalendar().putColorDayOfWeek(day, color);
 	}
 
 	public void nameDay(LocalDate day, String name) {
-		model.putNameDay(TimePoint.ofStartOfDay(day), name);
+		model.getDayCalendar().putNameDay(TimePoint.ofStartOfDay(day), name);
 	}
 
 	public LocalDate getToday() {
@@ -479,7 +479,7 @@ public class GanttDiagram extends TitledDiagram implements ToTaskDraw, WithSprit
 		if (today == null)
 			this.today = TimePoint.todayUtcAtMidnight();
 
-		model.putColorDayToday(today, colors.getCenter());
+		model.getDayCalendar().putColorDayToday(today, colors.getCenter());
 	}
 
 	public CommandExecutionResult setToday(LocalDate date) {

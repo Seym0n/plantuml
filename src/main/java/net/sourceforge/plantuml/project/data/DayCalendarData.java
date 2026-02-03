@@ -42,7 +42,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import net.sourceforge.plantuml.klimt.color.HColor;
-import net.sourceforge.plantuml.project.DayCalendar;
 import net.sourceforge.plantuml.project.OpenClose;
 import net.sourceforge.plantuml.project.time.TimePoint;
 
@@ -50,7 +49,7 @@ import net.sourceforge.plantuml.project.time.TimePoint;
  * Value object containing day calendar information:
  * open/closed days, day colors, and day names.
  */
-public class DayCalendarData implements DayCalendar {
+public class DayCalendarData {
 
 	private final OpenClose openClose = new OpenClose();
 	private final Map<TimePoint, String> nameDays = new HashMap<>();
@@ -58,17 +57,14 @@ public class DayCalendarData implements DayCalendar {
 	private final Map<TimePoint, HColor> colorDaysInternal = new HashMap<>();
 	private final Map<DayOfWeek, HColor> colorDaysOfWeek = new HashMap<>();
 
-	@Override
 	public boolean isOpen(LocalDate day) {
 		return openClose.getLoadAtDUMMY(day) > 0;
 	}
 
-	@Override
 	public boolean isOpen(TimePoint instant) {
 		return openClose.getLoadAtDUMMY(instant.toDay()) > 0;
 	}
 
-	@Override
 	public HColor getDayColor(TimePoint day) {
 		HColor color = colorDaysToday.get(day);
 		if (color == null)
@@ -76,17 +72,14 @@ public class DayCalendarData implements DayCalendar {
 		return color;
 	}
 
-	@Override
 	public HColor getDayOfWeekColor(DayOfWeek dayOfWeek) {
 		return colorDaysOfWeek.get(dayOfWeek);
 	}
 
-	@Override
 	public String getDayName(TimePoint day) {
 		return nameDays.get(day);
 	}
 
-	@Override
 	public OpenClose getOpenClose() {
 		return openClose;
 	}

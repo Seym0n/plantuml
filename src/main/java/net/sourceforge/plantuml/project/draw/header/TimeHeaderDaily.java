@@ -84,7 +84,7 @@ public class TimeHeaderDaily extends TimeHeaderCalendar {
 	}
 
 	private double getHeaderNameDayHeight() {
-		if (model.getNameDays().size() > 0) {
+		if (model.getDayCalendar().getNameDays().size() > 0) {
 			final double h = model.getFontSizeDay() + 6;
 			return h;
 		}
@@ -167,7 +167,7 @@ public class TimeHeaderDaily extends TimeHeaderCalendar {
 	}
 
 	private boolean isHidden(TimePoint wink) {
-		if (model.getScaleConfig().isHideClosed() && model.getOpenClose().isClosed(wink.toDay()))
+		if (model.getScaleConfig().isHideClosed() && model.getDayCalendar().getOpenClose().isClosed(wink.toDay()))
 			return true;
 		return false;
 	}
@@ -212,11 +212,11 @@ public class TimeHeaderDaily extends TimeHeaderCalendar {
 	}
 
 	private void printNamedDays(final UGraphic ug) {
-		if (model.getNameDays().size() > 0) {
+		if (model.getDayCalendar().getNameDays().size() > 0) {
 			String last = null;
 			for (LocalDate day = getMinDay(); day.compareTo(getMaxDay()) <= 0; day = day.plusDays(1)) {
 				final TimePoint wink = TimePoint.ofStartOfDay(day);
-				final String name = model.getDayName(wink);
+				final String name = model.getDayCalendar().getDayName(wink);
 				if (name != null && name.equals(last) == false) {
 					final double x1 = getTimeScale().getPosition(wink);
 					final TextBlock label = getTextBlock(SName.month, name, false, openFontColor());

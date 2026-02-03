@@ -56,7 +56,7 @@ public abstract class TimeHeaderCalendar extends TimeHeader {
 	}
 
 	protected final int getLoadAt(TimePoint instant) {
-		if (PiecewiseConstantUtils.isZeroOnDay(model.getOpenClose().asPiecewiseConstant(), instant.toDay()))
+		if (PiecewiseConstantUtils.isZeroOnDay(model.getDayCalendar().getOpenClose().asPiecewiseConstant(), instant.toDay()))
 			return 0;
 
 		return 100;
