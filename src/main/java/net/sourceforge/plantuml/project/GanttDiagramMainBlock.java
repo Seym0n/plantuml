@@ -64,10 +64,11 @@ public class GanttDiagramMainBlock extends AbstractTextBlock {
 	private final TimeHeader timeHeader;
 	private final GanttLayout layout;
 
-	public GanttDiagramMainBlock(GanttDiagram diagram, TimeHeader timeHeader, StringBounder stringBounder) {
+	public GanttDiagramMainBlock(GanttPreparedModel model, GanttDiagram diagram, TimeHeader timeHeader,
+			StringBounder stringBounder) {
 		this.diagram = diagram;
-		this.model = diagram.getModel();
-		this.timeHeader = timeHeader;		
+		this.model = model;
+		this.timeHeader = timeHeader;
 		this.layout = new GanttLayout(stringBounder, model, timeHeader);
 	}
 
@@ -81,9 +82,9 @@ public class GanttDiagramMainBlock extends AbstractTextBlock {
 
 			final Style timelineStyle = StyleSignatureBasic
 					.of(SName.root, SName.element, SName.ganttDiagram, SName.timeline)
-					.getMergedStyle(diagram.getCurrentStyleBuilder());
+					.getMergedStyle(model.getSkinParam().getCurrentStyleBuilder());
 
-			final HColor back = timelineStyle.value(PName.BackGroundColor).asColor(diagram.getIHtmlColorSet());
+			final HColor back = timelineStyle.value(PName.BackGroundColor).asColor(model.getIHtmlColorSet());
 			if (back.isTransparent() == false) {
 
 				final double fullWidth = layout.titlesWidth + layout.barsWidth;
@@ -142,8 +143,9 @@ public class GanttDiagramMainBlock extends AbstractTextBlock {
 
 	private void drawConstraints(final UGraphic ug, TimeScale timeScale) {
 		for (GanttConstraint constraint : model.getModelData().getConstraints()) {
-			if (model.getTimeBounds().getPrintStart() != null && constraint.isHidden(TimePoint.ofStartOfDay(model.getTimeBounds().getMinDay()),
-					TimePoint.ofEndOfDayMinusOneSecond(model.getTimeBounds().getMaxDay())))
+			if (model.getTimeBounds().getPrintStart() != null
+					&& constraint.isHidden(TimePoint.ofStartOfDay(model.getTimeBounds().getMinDay()),
+							TimePoint.ofEndOfDayMinusOneSecond(model.getTimeBounds().getMaxDay())))
 				continue;
 
 			constraint.getUDrawable(timeScale, model).drawU(ug);

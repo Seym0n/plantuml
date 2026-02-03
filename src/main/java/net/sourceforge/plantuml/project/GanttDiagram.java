@@ -182,7 +182,7 @@ public class GanttDiagram extends TitledDiagram implements ToTaskDraw, WithSprit
 				? new TimeHeaderSimple(model, stringBounder)
 				: model.buildTimeHeader();
 
-		final GanttDiagramMainBlock result = new GanttDiagramMainBlock(this, timeHeader, stringBounder);
+		final GanttDiagramMainBlock result = new GanttDiagramMainBlock(model, this, timeHeader, stringBounder);
 		return result;
 	}
 
@@ -196,7 +196,8 @@ public class GanttDiagram extends TitledDiagram implements ToTaskDraw, WithSprit
 					continue;
 
 				final TimePoint tmp = task.getEnd().minusOneSecond();
-				if (model.getTimeBounds().getMaxDay() == null || model.getTimeBounds().getMaxDay().compareTo(tmp.toDay()) < 0)
+				if (model.getTimeBounds().getMaxDay() == null
+						|| model.getTimeBounds().getMaxDay().compareTo(tmp.toDay()) < 0)
 					model.getTimeBounds().setMaxDay(tmp.toDay());
 			}
 		}
@@ -588,11 +589,6 @@ public class GanttDiagram extends TitledDiagram implements ToTaskDraw, WithSprit
 	@Override
 	public HColorSet getIHtmlColorSet() {
 		return model.getIHtmlColorSet();
-	}
-
-	// Package-visible accessor for GanttDiagramMainBlock
-	GanttPreparedModel getModel() {
-		return model;
 	}
 
 }

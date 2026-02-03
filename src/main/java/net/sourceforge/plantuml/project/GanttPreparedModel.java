@@ -160,7 +160,6 @@ public class GanttPreparedModel implements ToTaskDraw {
 	// ========================================================================
 	// Infrastructure
 	// ========================================================================
-	private final GanttStyle ganttStyle;
 	private final ISkinParam skinParam;
 
 	// ========================================================================
@@ -168,7 +167,6 @@ public class GanttPreparedModel implements ToTaskDraw {
 	// ========================================================================
 
 	public GanttPreparedModel(GanttStyle ganttStyle, ISkinParam skinParam) {
-		this.ganttStyle = ganttStyle;
 		this.skinParam = skinParam;
 		this.timelineStyle = new TimelineStyleData(ganttStyle, HColorSet.instance());
 	}
