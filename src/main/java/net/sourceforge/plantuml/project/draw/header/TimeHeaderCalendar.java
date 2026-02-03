@@ -52,11 +52,11 @@ public abstract class TimeHeaderCalendar extends TimeHeader {
 	}
 
 	protected final Locale locale() {
-		return model.locale;
+		return model.getLocale();
 	}
 
 	protected final int getLoadAt(TimePoint instant) {
-		if (PiecewiseConstantUtils.isZeroOnDay(model.openClose.asPiecewiseConstant(), instant.toDay()))
+		if (PiecewiseConstantUtils.isZeroOnDay(model.getOpenClose().asPiecewiseConstant(), instant.toDay()))
 			return 0;
 
 		return 100;

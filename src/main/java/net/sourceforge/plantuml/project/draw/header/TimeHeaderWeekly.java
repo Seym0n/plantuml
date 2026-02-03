@@ -76,7 +76,7 @@ public class TimeHeaderWeekly extends TimeHeaderCalendar {
 	}
 
 	private double getHeaderNameDayHeight() {
-		if (model.nameDays.size() > 0) {
+		if (model.getNameDays().size() > 0) {
 			final double h = model.getFontSizeDay() + 6;
 			return h;
 		}
@@ -139,11 +139,11 @@ public class TimeHeaderWeekly extends TimeHeaderCalendar {
 	}
 
 	private void printNamedDays(final UGraphic ug) {
-		if (model.nameDays.size() > 0) {
+		if (model.getNameDays().size() > 0) {
 			String last = null;
 			for (LocalDate day = getMinDay(); day.compareTo(getMaxDay()) <= 0; day = day.plusDays(1)) {
 				final TimePoint wink = TimePoint.ofStartOfDay(day);
-				final String name = model.nameDays.get(wink);
+				final String name = model.getDayName(wink);
 				if (name != null && name.equals(last) == false) {
 					final double x1 = getTimeScale().getPosition(wink);
 					final double x2 = getTimeScale().getPosition(wink) + getTimeScale().getWidth(wink);
@@ -164,7 +164,7 @@ public class TimeHeaderWeekly extends TimeHeaderCalendar {
 	protected void printVerticalSeparators(final UGraphic ug, double totalHeightWithoutFooter) {
 		for (LocalDate day = getMinDay(); day.compareTo(getMaxDay()) <= 0; day = day.plusDays(1)) {
 			final TimePoint wink = TimePoint.ofStartOfDay(day);
-			if (wink.toDayOfWeek() == model.weekNumberStrategy.getFirstDayOfWeek())
+			if (wink.toDayOfWeek() == model.getWeekNumberStrategy().getFirstDayOfWeek())
 				drawVline(ug.apply(getLineColor()), getTimeScale().getPosition(wink), getH1(ug.getStringBounder()),
 						totalHeightWithoutFooter);
 		}
@@ -175,17 +175,17 @@ public class TimeHeaderWeekly extends TimeHeaderCalendar {
 	}
 
 	private void printDaysOfMonth(final UGraphic ug) {
-		int counter = model.weekStartingNumber;
+		int counter = model.getWeekStartingNumber();
 		for (LocalDate day = getMinDay(); day.compareTo(getMaxDay().plusDays(-1)) < 0; day = day.plusDays(1)) {
 			final TimePoint wink = TimePoint.ofStartOfDay(day);
-			if (wink.toDayOfWeek() == model.weekNumberStrategy.getFirstDayOfWeek()) {
+			if (wink.toDayOfWeek() == model.getWeekNumberStrategy().getFirstDayOfWeek()) {
 				final String num;
-				if (model.weeklyHeaderStrategy == WeeklyHeaderStrategy.FROM_N)
+				if (model.getWeeklyHeaderStrategy() == WeeklyHeaderStrategy.FROM_N)
 					num = "" + (counter++);
-				else if (model.weeklyHeaderStrategy == WeeklyHeaderStrategy.DAY_OF_MONTH)
+				else if (model.getWeeklyHeaderStrategy() == WeeklyHeaderStrategy.DAY_OF_MONTH)
 					num = "" + wink.getDayOfMonth();
 				else
-					num = "" + wink.getWeekOfYear(model.weekNumberStrategy);
+					num = "" + wink.getWeekOfYear(model.getWeekNumberStrategy());
 				final TextBlock textBlock = getTextBlock(SName.day, num, false, openFontColor());
 				printLeft(ug.apply(UTranslate.dy(getH1(ug.getStringBounder()))), textBlock,
 						getTimeScale().getPosition(wink) + 5);

@@ -47,18 +47,11 @@ import net.sourceforge.plantuml.klimt.shape.URectangle;
 import net.sourceforge.plantuml.log.Logme;
 import net.sourceforge.plantuml.project.core.Resource;
 import net.sourceforge.plantuml.project.core.Task;
-import net.sourceforge.plantuml.project.core.TaskGroup;
-import net.sourceforge.plantuml.project.core.TaskImpl;
-import net.sourceforge.plantuml.project.core.TaskSeparator;
 import net.sourceforge.plantuml.project.draw.ResourceDraw;
 import net.sourceforge.plantuml.project.draw.TaskDraw;
-import net.sourceforge.plantuml.project.draw.TaskDrawDiamond;
-import net.sourceforge.plantuml.project.draw.TaskDrawGroup;
-import net.sourceforge.plantuml.project.draw.TaskDrawSeparator;
 import net.sourceforge.plantuml.project.draw.header.TimeHeader;
 import net.sourceforge.plantuml.project.time.TimePoint;
 import net.sourceforge.plantuml.project.timescale.TimeScale;
-import net.sourceforge.plantuml.real.Real;
 import net.sourceforge.plantuml.style.PName;
 import net.sourceforge.plantuml.style.SName;
 import net.sourceforge.plantuml.style.Style;
@@ -67,13 +60,15 @@ import net.sourceforge.plantuml.style.StyleSignatureBasic;
 public class GanttDiagramMainBlock extends AbstractTextBlock {
 
 	private final GanttDiagram diagram;
+	private final GanttPreparedModel model;
 	private final TimeHeader timeHeader;
 	private final GanttLayout layout;
 
 	public GanttDiagramMainBlock(GanttDiagram diagram, TimeHeader timeHeader, StringBounder stringBounder) {
 		this.diagram = diagram;
+		this.model = diagram.getModel();
 		this.timeHeader = timeHeader;		
-		this.layout = new GanttLayout(stringBounder, diagram.model, timeHeader);
+		this.layout = new GanttLayout(stringBounder, model, timeHeader);
 	}
 
 	@Override
@@ -81,7 +76,7 @@ public class GanttDiagramMainBlock extends AbstractTextBlock {
 		try {
 			final UGraphic ugOrig = ug;
 
-			if (diagram.model.labelStrategy.titleInFirstColumn())
+			if (model.getLabelStrategy().titleInFirstColumn())
 				ug = ug.apply(UTranslate.dx(layout.titlesWidth));
 
 			final Style timelineStyle = StyleSignatureBasic
@@ -95,23 +90,23 @@ public class GanttDiagramMainBlock extends AbstractTextBlock {
 
 				final URectangle rect1 = URectangle.build(fullWidth, layout.headerHeight);
 				ug.apply(back.bg()).draw(rect1);
-				if (diagram.model.showFootbox) {
+				if (model.isShowFootbox()) {
 					final URectangle rect2 = URectangle.build(fullWidth, layout.footerHeight);
-					ug.apply(back.bg()).apply(UTranslate.dy(diagram.model.totalHeightWithoutFooter)).draw(rect2);
+					ug.apply(back.bg()).apply(UTranslate.dy(model.getTotalHeightWithoutFooter())).draw(rect2);
 				}
 			}
 
-			timeHeader.drawTimeHeader(ug, diagram.model.totalHeightWithoutFooter);
+			timeHeader.drawTimeHeader(ug, model.getTotalHeightWithoutFooter());
 
 			drawConstraints(ug, timeHeader.getTimeScale());
 			drawTasksRect(ug);
 			drawTasksTitle(ugOrig, layout.titlesWidth, layout.barsWidth);
 
-			if (diagram.model.hideResourceFoobox == false)
+			if (model.isHideResourceFootbox() == false)
 				drawResources(ug);
 
-			if (diagram.model.showFootbox)
-				timeHeader.drawTimeFooter(ug.apply(UTranslate.dy(diagram.model.totalHeightWithoutFooter)));
+			if (model.isShowFootbox())
+				timeHeader.drawTimeFooter(ug.apply(UTranslate.dy(model.getTotalHeightWithoutFooter())));
 
 		} catch (Throwable e) {
 			Logme.error(e);
@@ -135,40 +130,40 @@ public class GanttDiagramMainBlock extends AbstractTextBlock {
 	}
 
 	private void drawTasksRect(UGraphic ug) {
-		for (Task task : diagram.model.tasks.values()) {
-			if (diagram.model.isHidden(task))
+		for (Task task : model.getTasks()) {
+			if (model.isHidden(task))
 				continue;
 
-			final TaskDraw draw = diagram.model.draws.get(task);
+			final TaskDraw draw = model.getTaskDraw(task);
 			final UTranslate move = UTranslate.dy(draw.getY(ug.getStringBounder()).getCurrentValue());
 			draw.drawU(ug.apply(move));
 		}
 	}
 
 	private void drawConstraints(final UGraphic ug, TimeScale timeScale) {
-		for (GanttConstraint constraint : diagram.model.constraints) {
-			if (diagram.model.printStart != null && constraint.isHidden(TimePoint.ofStartOfDay(diagram.model.minDay),
-					TimePoint.ofEndOfDayMinusOneSecond(diagram.model.maxDay)))
+		for (GanttConstraint constraint : model.getConstraints()) {
+			if (model.getPrintStart() != null && constraint.isHidden(TimePoint.ofStartOfDay(model.getMinDay()),
+					TimePoint.ofEndOfDayMinusOneSecond(model.getMaxDay())))
 				continue;
 
-			constraint.getUDrawable(timeScale, diagram.model).drawU(ug);
+			constraint.getUDrawable(timeScale, model).drawU(ug);
 		}
 
 	}
 
 	private void drawTasksTitle(UGraphic ug, double colTitles, double colBars) {
-		for (Task task : diagram.model.tasks.values()) {
-			if (diagram.model.isHidden(task))
+		for (Task task : model.getTasks()) {
+			if (model.isHidden(task))
 				continue;
 
-			final TaskDraw draw = diagram.model.draws.get(task);
+			final TaskDraw draw = model.getTaskDraw(task);
 			final UTranslate move = UTranslate.dy(draw.getY(ug.getStringBounder()).getCurrentValue());
-			draw.drawTitle(ug.apply(move), diagram.model.labelStrategy, colTitles, colBars);
+			draw.drawTitle(ug.apply(move), model.getLabelStrategy(), colTitles, colBars);
 		}
 	}
 
 	private void drawResources(UGraphic ug) {
-		for (Resource res : diagram.model.resources.values()) {
+		for (Resource res : model.getResources()) {
 			final ResourceDraw draw = res.getResourceDraw();
 			final UTranslate move = UTranslate.dy(draw.getY());
 			draw.drawU(ug.apply(move));

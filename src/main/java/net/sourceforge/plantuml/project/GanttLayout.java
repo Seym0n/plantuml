@@ -37,20 +37,10 @@ package net.sourceforge.plantuml.project;
 
 import net.sourceforge.plantuml.klimt.font.StringBounder;
 import net.sourceforge.plantuml.klimt.geom.XDimension2D;
-import net.sourceforge.plantuml.project.core.Resource;
 import net.sourceforge.plantuml.project.core.Task;
-import net.sourceforge.plantuml.project.core.TaskGroup;
-import net.sourceforge.plantuml.project.core.TaskImpl;
-import net.sourceforge.plantuml.project.core.TaskSeparator;
-import net.sourceforge.plantuml.project.draw.ResourceDraw;
 import net.sourceforge.plantuml.project.draw.TaskDraw;
-import net.sourceforge.plantuml.project.draw.TaskDrawDiamond;
-import net.sourceforge.plantuml.project.draw.TaskDrawGroup;
-import net.sourceforge.plantuml.project.draw.TaskDrawSeparator;
 import net.sourceforge.plantuml.project.draw.header.TimeHeader;
 import net.sourceforge.plantuml.project.time.TimePoint;
-import net.sourceforge.plantuml.project.timescale.TimeScale;
-import net.sourceforge.plantuml.real.Real;
 
 public final class GanttLayout {
 
@@ -65,15 +55,15 @@ public final class GanttLayout {
 		model.initTaskAndResourceDraws(stringBounder, timeHeader);
 
 		final double computedTitlesWidth;
-		if (model.labelStrategy.titleInside()) {
+		if (model.getLabelStrategy().titleInside()) {
 			computedTitlesWidth = 0;
 		} else {
 			double w = 0;
-			for (Task task : model.tasks.values()) {
+			for (Task task : model.getTasks()) {
 				if (model.isHidden(task))
 					continue;
 
-				final TaskDraw draw = model.draws.get(task);
+				final TaskDraw draw = model.getTaskDraw(task);
 				if (draw == null)
 					continue;
 
@@ -85,8 +75,8 @@ public final class GanttLayout {
 		this.titlesWidth = computedTitlesWidth;
 		this.barsWidth = getBarsColumnWidth(model, timeHeader);
 		this.headerHeight = timeHeader.getTimeHeaderHeight(stringBounder);
-		this.footerHeight = model.showFootbox ? timeHeader.getTimeFooterHeight(stringBounder) : 0;
-		this.totalHeight = model.totalHeightWithoutFooter + this.footerHeight;
+		this.footerHeight = model.isShowFootbox() ? timeHeader.getTimeFooterHeight(stringBounder) : 0;
+		this.totalHeight = model.getTotalHeightWithoutFooter() + this.footerHeight;
 	}
 
 	public XDimension2D calculateDimension() {
@@ -95,8 +85,8 @@ public final class GanttLayout {
 	}
 
 	private double getBarsColumnWidth(GanttPreparedModel model, TimeHeader timeHeader) {
-		final double xmin = timeHeader.getTimeScale().getPosition(TimePoint.ofStartOfDay(model.minDay));
-		final double xmax = timeHeader.getTimeScale().getPosition(TimePoint.ofEndOfDayMinusOneSecond(model.maxDay));
+		final double xmin = timeHeader.getTimeScale().getPosition(TimePoint.ofStartOfDay(model.getMinDay()));
+		final double xmax = timeHeader.getTimeScale().getPosition(TimePoint.ofEndOfDayMinusOneSecond(model.getMaxDay()));
 		return xmax - xmin;
 	}
 }

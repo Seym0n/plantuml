@@ -40,10 +40,8 @@ import java.io.OutputStream;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -63,7 +61,6 @@ import net.sourceforge.plantuml.klimt.color.HColorSet;
 import net.sourceforge.plantuml.klimt.color.HColors;
 import net.sourceforge.plantuml.klimt.creole.Display;
 import net.sourceforge.plantuml.klimt.font.StringBounder;
-import net.sourceforge.plantuml.klimt.geom.HorizontalAlignment;
 import net.sourceforge.plantuml.klimt.shape.TextBlock;
 import net.sourceforge.plantuml.preproc.PreprocessingArtifact;
 import net.sourceforge.plantuml.project.core.Moment;
@@ -77,9 +74,6 @@ import net.sourceforge.plantuml.project.core.TaskGroup;
 import net.sourceforge.plantuml.project.core.TaskImpl;
 import net.sourceforge.plantuml.project.core.TaskInstant;
 import net.sourceforge.plantuml.project.core.TaskSeparator;
-import net.sourceforge.plantuml.project.draw.FingerPrint;
-import net.sourceforge.plantuml.project.draw.ResourceDraw;
-import net.sourceforge.plantuml.project.draw.ResourceDrawNumbers;
 import net.sourceforge.plantuml.project.draw.TaskDraw;
 import net.sourceforge.plantuml.project.draw.TaskDrawRegular;
 import net.sourceforge.plantuml.project.draw.WeeklyHeaderStrategy;
@@ -90,10 +84,6 @@ import net.sourceforge.plantuml.project.ngm.math.PiecewiseConstant;
 import net.sourceforge.plantuml.project.solver.ImpossibleSolvingException;
 import net.sourceforge.plantuml.project.time.TimePoint;
 import net.sourceforge.plantuml.project.time.WeekNumberStrategy;
-import net.sourceforge.plantuml.project.timescale.TimeScale;
-import net.sourceforge.plantuml.real.Real;
-import net.sourceforge.plantuml.real.RealOrigin;
-import net.sourceforge.plantuml.real.RealUtils;
 import net.sourceforge.plantuml.skin.UmlDiagramType;
 import net.sourceforge.plantuml.stereo.Stereotype;
 import net.sourceforge.plantuml.style.ClockwiseTopRightBottomLeft;
@@ -106,7 +96,7 @@ public class GanttDiagram extends TitledDiagram implements ToTaskDraw, WithSprit
 	// ------------------------------------------------------------------------
 	// model / prepared state
 	// ------------------------------------------------------------------------
-	final protected GanttPreparedModel model;
+	private final GanttPreparedModel model;
 
 	// ------------------------------------------------------------------------
 	// diagram configuration (styling / options)
@@ -134,7 +124,7 @@ public class GanttDiagram extends TitledDiagram implements ToTaskDraw, WithSprit
 	private static final Pattern RESOURCE_ASSIGNMENT_PATTERN = Pattern.compile("([^:]+)(:(\\d+))?");
 
 	public CommandExecutionResult changeLanguage(String lang) {
-		this.model.locale = new Locale(lang);
+		model.setLocale(new Locale(lang));
 		return CommandExecutionResult.ok();
 	}
 
@@ -143,7 +133,7 @@ public class GanttDiagram extends TitledDiagram implements ToTaskDraw, WithSprit
 	}
 
 	public void setWeekNumberStrategy(DayOfWeek firstDayOfWeek, int minimalDaysInFirstWeek) {
-		this.model.weekNumberStrategy = new WeekNumberStrategy(firstDayOfWeek, minimalDaysInFirstWeek);
+		model.setWeekNumberStrategy(new WeekNumberStrategy(firstDayOfWeek, minimalDaysInFirstWeek));
 	}
 
 	public GanttDiagram(UmlSource source, PreprocessingArtifact preprocessing) {
@@ -162,11 +152,11 @@ public class GanttDiagram extends TitledDiagram implements ToTaskDraw, WithSprit
 	}
 
 	public void setPrintScale(PrintScale printScale) {
-		this.model.printScale = printScale;
+		model.setPrintScale(printScale);
 	}
 
 	public void setFactorScale(double factorScale) {
-		model.factorScale = factorScale;
+		model.setFactorScale(factorScale);
 	}
 
 	@Override
@@ -182,13 +172,13 @@ public class GanttDiagram extends TitledDiagram implements ToTaskDraw, WithSprit
 	@Override
 	protected TextBlock getTextMainBlock(FileFormatOption fileFormatOption) {
 		final StringBounder stringBounder = fileFormatOption.getDefaultStringBounder(getSkinParam());
-		if (model.printStart == null) {
+		if (model.getPrintStart() == null) {
 			initMinMax();
 		} else {
-			this.model.minDay = model.printStart;
-			this.model.maxDay = model.printEnd;
+			model.setMinDay(model.getPrintStart());
+			model.setMaxDay(model.getPrintEnd());
 		}
-		final TimeHeader timeHeader = model.minDay.equals(TimePoint.epoch())
+		final TimeHeader timeHeader = model.getMinDay().equals(TimePoint.epoch())
 				? new TimeHeaderSimple(model, stringBounder)
 				: model.buildTimeHeader();
 
@@ -197,30 +187,27 @@ public class GanttDiagram extends TitledDiagram implements ToTaskDraw, WithSprit
 	}
 
 	private void initMinMax() {
-		if (model.tasks.size() == 0) {
-			model.maxDay = model.minDay;
+		if (model.getTasks().isEmpty()) {
+			model.setMaxDay(model.getMinDay());
 		} else {
-			model.maxDay = null;
-			for (Task task : model.tasks.values()) {
+			model.setMaxDay(null);
+			for (Task task : model.getTasks()) {
 				if (task instanceof TaskSeparator || task instanceof TaskGroup)
 					continue;
 
 				final TimePoint tmp = task.getEnd().minusOneSecond();
-				if (model.maxDay == null || model.maxDay.compareTo(tmp.toDay()) < 0)
-					model.maxDay = tmp.toDay();
+				if (model.getMaxDay() == null || model.getMaxDay().compareTo(tmp.toDay()) < 0)
+					model.setMaxDay(tmp.toDay());
 			}
 		}
 
-		for (TimePoint d : model.colorDays().keySet())
-			if (d.toDay().compareTo(model.maxDay) > 0)
-				model.maxDay = d.toDay();
+		for (TimePoint d : model.getColorDays().keySet())
+			if (d.toDay().compareTo(model.getMaxDay()) > 0)
+				model.setMaxDay(d.toDay());
 
-		for (TimePoint d : model.nameDays.keySet())
-			if (d.toDay().compareTo(model.maxDay) > 0)
-				model.maxDay = d.toDay();
-
-		// maxTimePointPrintedEndOfDay =
-		// maxTimePoint1.minusOneSecond().floorToDay().ofEndOfDay();
+		for (TimePoint d : model.getNameDays().keySet())
+			if (d.toDay().compareTo(model.getMaxDay()) > 0)
+				model.setMaxDay(d.toDay());
 	}
 
 	@Override
@@ -240,19 +227,19 @@ public class GanttDiagram extends TitledDiagram implements ToTaskDraw, WithSprit
 	}
 
 	public void closeDayOfWeek(DayOfWeek day, String task) {
-		model.openClose.close(day);
+		model.getOpenClose().close(day);
 	}
 
 	public void openDayOfWeek(DayOfWeek day, String task) {
 		if (task.length() == 0)
-			model.openClose.open(day);
+			model.getOpenClose().open(day);
 		else
 			getOpenCloseForTask(task).open(day);
 	}
 
 	public void closeDayAsDate(LocalDate day, String task) {
 		if (task.length() == 0)
-			model.openClose.close(day);
+			model.getOpenClose().close(day);
 		else
 			getOpenCloseForTask(task).close(day);
 
@@ -260,7 +247,7 @@ public class GanttDiagram extends TitledDiagram implements ToTaskDraw, WithSprit
 
 	public void openDayAsDate(LocalDate day, String task) {
 		if (task.length() == 0)
-			model.openClose.open(day);
+			model.getOpenClose().open(day);
 		else
 			getOpenCloseForTask(task).open(day);
 
@@ -276,12 +263,12 @@ public class GanttDiagram extends TitledDiagram implements ToTaskDraw, WithSprit
 	}
 
 	public TimePoint getThenDate() {
-		TimePoint result = TimePoint.ofStartOfDay(model.minDay);
-		for (TimePoint d : model.colorDays().keySet())
+		TimePoint result = TimePoint.ofStartOfDay(model.getMinDay());
+		for (TimePoint d : model.getColorDays().keySet())
 			if (d.compareTo(result) > 0)
 				result = d;
 
-		for (TimePoint d : model.nameDays.keySet())
+		for (TimePoint d : model.getNameDays().keySet())
 			if (d.compareTo(result) > 0)
 				result = d;
 
@@ -290,7 +277,7 @@ public class GanttDiagram extends TitledDiagram implements ToTaskDraw, WithSprit
 
 	public Task getExistingTask(String id) {
 		final TaskCode code = TaskCode.fromId(Objects.requireNonNull(id));
-		return model.tasks.get(code);
+		return model.getTask(code);
 	}
 
 	public GanttConstraint forceTaskOrder(Task task1, Task task2) {
@@ -303,18 +290,18 @@ public class GanttDiagram extends TitledDiagram implements ToTaskDraw, WithSprit
 	}
 
 	public Task getOrCreateTask(TaskCode code, boolean linkedToPrevious) {
-		Task result = model.tasks.get(Objects.requireNonNull(code));
+		Task result = model.getTask(Objects.requireNonNull(code));
 		if (result == null) {
 			Task previous = null;
 			if (linkedToPrevious)
 				previous = getLastCreatedTask();
 
 			result = new TaskImpl(this, getSkinParam().getCurrentStyleBuilder(), code,
-					TimePoint.ofStartOfDay(model.minDay), defaultCompletion);
+					TimePoint.ofStartOfDay(model.getMinDay()), defaultCompletion);
 			if (currentGroup != null)
 				currentGroup.addTask(result);
 
-			model.tasks.put(code, result);
+			model.putTask(code, result);
 
 			if (previous != null)
 				forceTaskOrder(previous, result);
@@ -324,11 +311,11 @@ public class GanttDiagram extends TitledDiagram implements ToTaskDraw, WithSprit
 	}
 
 	public PiecewiseConstant getLoadPlanableForTask(String taskId) {
-		return model.openClose.mutateMe(this.openCloseForTask.get(taskId)).asPiecewiseConstant();
+		return model.getOpenClose().mutateMe(this.openCloseForTask.get(taskId)).asPiecewiseConstant();
 	}
 
 	private Task getLastCreatedTask() {
-		final List<Task> all = new ArrayList<>(model.tasks.values());
+		final List<Task> all = new ArrayList<>(model.getTasks());
 		for (int i = all.size() - 1; i >= 0; i--)
 			if (all.get(i) instanceof TaskImpl)
 				return all.get(i);
@@ -338,8 +325,8 @@ public class GanttDiagram extends TitledDiagram implements ToTaskDraw, WithSprit
 
 	public void addSeparator(String comment) {
 		TaskSeparator separator = new TaskSeparator(getSkinParam().getCurrentStyleBuilder(), comment,
-				model.tasks.size());
-		model.tasks.put(separator.getCode(), separator);
+				model.getTasks().size());
+		model.putTask(separator.getCode(), separator);
 	}
 
 	public CommandExecutionResult addGroup(TaskCode code) {
@@ -349,7 +336,7 @@ public class GanttDiagram extends TitledDiagram implements ToTaskDraw, WithSprit
 			this.currentGroup.addTask(group);
 
 		this.currentGroup = group;
-		model.tasks.put(group.getCode(), group);
+		model.putTask(group.getCode(), group);
 		return CommandExecutionResult.ok();
 	}
 
@@ -363,41 +350,37 @@ public class GanttDiagram extends TitledDiagram implements ToTaskDraw, WithSprit
 	}
 
 	public void addContraint(GanttConstraint constraint) {
-		model.constraints.add(constraint);
+		model.addConstraint(constraint);
 	}
 
 	public CommandExecutionResult updateStartingPoint(LocalDate start) {
-		if (model.tasks.size() > 0)
+		if (model.getTasks().size() > 0)
 			return CommandExecutionResult.error("Starting point must be set before task definition");
 
-		this.model.minDay = start;
+		model.setMinDay(start);
 		return CommandExecutionResult.ok();
 	}
 
-//	public TimePoint getMinTimePoint() {
-//		return minTimePoint;
-//	}
-
 	public LocalDate getMinDay() {
-		return model.minDay;
+		return model.getMinDay();
 	}
 
 	public LocalDate getMaxDay() {
 		initMinMax();
-		return model.maxDay;
+		return model.getMaxDay();
 	}
 
 	public TimePoint getMinTimePoint() {
-		return TimePoint.ofStartOfDay(model.minDay);
+		return TimePoint.ofStartOfDay(model.getMinDay());
 	}
 
 	public TimePoint getMaxTimePoint() {
 		initMinMax();
-		return TimePoint.ofStartOfDay(model.maxDay);
+		return TimePoint.ofStartOfDay(model.getMaxDay());
 	}
 
 	public int daysInWeek() {
-		return model.openClose.daysInWeek();
+		return model.getOpenClose().daysInWeek();
 	}
 
 	public int daysInMonth() {
@@ -405,7 +388,7 @@ public class GanttDiagram extends TitledDiagram implements ToTaskDraw, WithSprit
 	}
 
 	public boolean isOpen(LocalDate day) {
-		return model.openClose.getLoadAtDUMMY(day) > 0;
+		return model.isOpen(day);
 	}
 
 	public boolean affectResource(Task result, String description) {
@@ -426,11 +409,11 @@ public class GanttDiagram extends TitledDiagram implements ToTaskDraw, WithSprit
 	}
 
 	public Resource getResource(String resourceName) {
-		Resource resource = model.resources.get(resourceName);
+		Resource resource = model.getResource(resourceName);
 		if (resource == null)
 			resource = new Resource(resourceName);
 
-		model.resources.put(resourceName, resource);
+		model.putResource(resourceName, resource);
 		return resource;
 	}
 
@@ -439,7 +422,7 @@ public class GanttDiagram extends TitledDiagram implements ToTaskDraw, WithSprit
 		if (result == null) {
 			TimePoint start = null;
 			TimePoint end = null;
-			for (Map.Entry<TimePoint, String> ent : model.nameDays.entrySet()) {
+			for (Map.Entry<TimePoint, String> ent : model.getNameDays().entrySet()) {
 				if (ent.getValue().equalsIgnoreCase(id) == false)
 					continue;
 
@@ -474,15 +457,15 @@ public class GanttDiagram extends TitledDiagram implements ToTaskDraw, WithSprit
 	}
 
 	public void colorDay(LocalDate day, HColor color) {
-		model.colorDaysInternal.put(TimePoint.ofStartOfDay(day), color);
+		model.putColorDayInternal(TimePoint.ofStartOfDay(day), color);
 	}
 
 	public void colorDay(DayOfWeek day, HColor color) {
-		model.colorDaysOfWeek.put(day, color);
+		model.putColorDayOfWeek(day, color);
 	}
 
 	public void nameDay(LocalDate day, String name) {
-		model.nameDays.put(TimePoint.ofStartOfDay(day), name);
+		model.putNameDay(TimePoint.ofStartOfDay(day), name);
 	}
 
 	public LocalDate getToday() {
@@ -496,7 +479,7 @@ public class GanttDiagram extends TitledDiagram implements ToTaskDraw, WithSprit
 		if (today == null)
 			this.today = TimePoint.todayUtcAtMidnight();
 
-		model.colorDaysToday.put(today, colors.getCenter());
+		model.putColorDayToday(today, colors.getCenter());
 	}
 
 	public CommandExecutionResult setToday(LocalDate date) {
@@ -510,13 +493,13 @@ public class GanttDiagram extends TitledDiagram implements ToTaskDraw, WithSprit
 	}
 
 	public void setPrintInterval(LocalDate start, LocalDate end) {
-		this.model.printStart = start;
-		this.model.printEnd = end;
+		model.setPrintStart(start);
+		model.setPrintEnd(end);
 	}
 
 	public CommandExecutionResult addNote(Display note, Stereotype stereotype) {
 		Task last = null;
-		for (Task current : model.tasks.values())
+		for (Task current : model.getTasks())
 			last = current;
 		if (last == null)
 			return CommandExecutionResult.error("No task defined");
@@ -526,8 +509,7 @@ public class GanttDiagram extends TitledDiagram implements ToTaskDraw, WithSprit
 	}
 
 	public void setShowFootbox(boolean footbox) {
-		this.model.showFootbox = footbox;
-
+		model.setShowFootbox(footbox);
 	}
 
 	@Override
@@ -536,26 +518,26 @@ public class GanttDiagram extends TitledDiagram implements ToTaskDraw, WithSprit
 	}
 
 	public void setLabelStrategy(LabelStrategy strategy) {
-		this.model.labelStrategy = strategy;
+		model.setLabelStrategy(strategy);
 	}
 
 	public void setWeeklyHeaderStrategy(WeeklyHeaderStrategy weeklyHeaderStrategy, int weekStartingNumber) {
-		this.model.weeklyHeaderStrategy = weeklyHeaderStrategy;
-		this.model.weekStartingNumber = weekStartingNumber;
+		model.setWeeklyHeaderStrategy(weeklyHeaderStrategy);
+		model.setWeekStartingNumber(weekStartingNumber);
 	}
 
 	public CommandExecutionResult hideResourceName() {
-		this.model.hideResourceName = true;
+		model.setHideResourceName(true);
 		return CommandExecutionResult.ok();
 	}
 
 	public CommandExecutionResult hideResourceFootbox() {
-		this.model.hideResourceFoobox = true;
+		model.setHideResourceFootbox(true);
 		return CommandExecutionResult.ok();
 	}
 
 	public void addVerticalSeparatorBefore(LocalDate day) {
-		model.verticalSeparatorBefore.add(TimePoint.ofStartOfDay(day));
+		model.addVerticalSeparatorBefore(TimePoint.ofStartOfDay(day));
 	}
 
 	public void setTaskDefaultCompletion(int defaultCompletion) {
@@ -564,9 +546,9 @@ public class GanttDiagram extends TitledDiagram implements ToTaskDraw, WithSprit
 
 	public List<TaskDrawRegular> getAllTasksForResource(Resource res) {
 		final List<TaskDrawRegular> result = new ArrayList<TaskDrawRegular>();
-		for (Task task : model.tasks.values())
+		for (Task task : model.getTasks())
 			if (task.isAssignedTo(res)) {
-				final TaskDrawRegular draw = (TaskDrawRegular) model.draws.get(task);
+				final TaskDrawRegular draw = (TaskDrawRegular) model.getTaskDraw(task);
 				result.add(draw);
 			}
 
@@ -590,7 +572,7 @@ public class GanttDiagram extends TitledDiagram implements ToTaskDraw, WithSprit
 	}
 
 	public void setHideClosed(boolean hideClosed) {
-		model.hideClosed = hideClosed;
+		model.setHideClosed(hideClosed);
 	}
 
 	@Override
@@ -606,6 +588,11 @@ public class GanttDiagram extends TitledDiagram implements ToTaskDraw, WithSprit
 	@Override
 	public HColorSet getIHtmlColorSet() {
 		return model.getIHtmlColorSet();
+	}
+
+	// Package-visible accessor for GanttDiagramMainBlock
+	GanttPreparedModel getModel() {
+		return model;
 	}
 
 }

@@ -176,7 +176,7 @@ public class TimeHeaderMonthly extends TimeHeaderCalendar {
 	}
 
 	private double getHeaderNameDayHeight() {
-		if (model.nameDays.size() > 0) {
+		if (model.getNameDays().size() > 0) {
 			final double h = model.getFontSizeDay() + 6;
 			return h;
 		}
@@ -185,11 +185,11 @@ public class TimeHeaderMonthly extends TimeHeaderCalendar {
 	}
 
 	private void printNamedDays(final UGraphic ug) {
-		if (model.nameDays.size() > 0) {
+		if (model.getNameDays().size() > 0) {
 			String last = null;
 			for (LocalDate day = getMinDay(); day.compareTo(getMaxDay().plusDays(1)) <= 0; day = day.plusDays(1)) {
 				final TimePoint wink = TimePoint.ofStartOfDay(day);
-				final String name = model.nameDays.get(wink);
+				final String name = model.getDayName(wink);
 				if (name != null && name.equals(last) == false) {
 					final double x1 = getTimeScale().getPosition(wink);
 					final double x2 = getTimeScale().getPosition(wink) + getTimeScale().getWidth(wink);

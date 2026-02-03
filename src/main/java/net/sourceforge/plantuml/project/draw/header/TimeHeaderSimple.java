@@ -87,7 +87,7 @@ public class TimeHeaderSimple extends TimeHeader {
 			initDelta(day);
 
 		for (int i = 0; i < delta; i++)
-			day = day.increment(model.printScale);
+			day = day.increment(model.getPrintScale());
 
 		return day;
 	}
@@ -97,7 +97,7 @@ public class TimeHeaderSimple extends TimeHeader {
 			initDelta(day);
 
 		for (int i = 0; i < delta; i++)
-			day = increment(day, model.printScale);
+			day = increment(day, model.getPrintScale());
 
 		return day;
 	}
@@ -109,7 +109,7 @@ public class TimeHeaderSimple extends TimeHeader {
 	}
 
 	private void initDelta(LocalDate day) {
-		if (model.printScale == PrintScale.DAILY) {
+		if (model.getPrintScale() == PrintScale.DAILY) {
 			final double x1 = getTimeScale().getPosition(TimePoint.ofStartOfDay(day));
 			do {
 				delta++;
@@ -122,7 +122,7 @@ public class TimeHeaderSimple extends TimeHeader {
 	}
 
 	private void initDelta(TimePoint day) {
-		if (model.printScale == PrintScale.DAILY) {
+		if (model.getPrintScale() == PrintScale.DAILY) {
 			final double x1 = getTimeScale().getPosition(day);
 			do {
 				delta++;
@@ -149,17 +149,17 @@ public class TimeHeaderSimple extends TimeHeader {
 		for (LocalDate day = getMinDay(); day.compareTo(getMaxDay().plusDays(1)) <= 0; day = increment(day)) {
 			final TimePoint wink = TimePoint.ofStartOfDay(day);
 			final int value;
-			if (model.printScale == PrintScale.WEEKLY)
+			if (model.getPrintScale() == PrintScale.WEEKLY)
 				value = wink.getAbsoluteDayNum() / 7 + 1;
 			else
 				value = wink.getAbsoluteDayNum() + 1;
-			final UFont font = model.getStyleDay().getUFont();
+			final UFont font = model.getFont(SName.day);
 			final FontConfiguration fontConfiguration = getFontConfiguration(font, false, openFontColor());
 			final TextBlock num = Display.getWithNewlines(getPragma(), "" + value).create(fontConfiguration,
 					HorizontalAlignment.LEFT, new SpriteContainerEmpty());
 			final double x1 = getTimeScale().getPosition(wink);
 			final double x2;
-			if (model.printScale == PrintScale.WEEKLY)
+			if (model.getPrintScale() == PrintScale.WEEKLY)
 				x2 = getTimeScale().getPosition(wink.addDays(6)) + getTimeScale().getWidth(wink.addDays(6));
 			else
 				x2 = getTimeScale().getPosition(increment(wink));
