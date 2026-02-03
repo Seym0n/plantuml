@@ -95,19 +95,24 @@ import net.sourceforge.plantuml.skin.Pragma;
 import net.sourceforge.plantuml.style.ISkinParam;
 import net.sourceforge.plantuml.style.SName;
 
-public class GanttPreparedModel implements ToTaskDraw, TimeBounds, TimeScaleConfig,
-		WeekConfig, DayCalendar, DisplayConfig, TimelineStyle, VerticalSeparators, TaskDrawRegistry, LocaleProvider {
+public class GanttPreparedModel implements ToTaskDraw, TimeScaleConfig, WeekConfig, DayCalendar, DisplayConfig,
+		TimelineStyle, VerticalSeparators, TaskDrawRegistry, LocaleProvider {
 
 	// ========================================================================
 	// Value objects
 	// ========================================================================
 	private final GanttModelData modelData = new GanttModelData();
-	
+
 	public GanttModelData getModelData() {
 		return modelData;
 	}
 
 	private final TimeBoundsData timeBounds = new TimeBoundsData();
+
+	public TimeBoundsData getTimeBounds() {
+		return timeBounds;
+	}
+
 	private final TimeScaleConfigData scaleConfig = new TimeScaleConfigData();
 	private final WeekConfigData weekConfig = new WeekConfigData();
 	private final DayCalendarData dayCalendar = new DayCalendarData();
@@ -138,46 +143,6 @@ public class GanttPreparedModel implements ToTaskDraw, TimeBounds, TimeScaleConf
 		this.timelineStyle = new TimelineStyleData(ganttStyle, HColorSet.instance());
 	}
 
-	// ========================================================================
-	// GanttModel delegation
-	// ========================================================================
-
-
-	@Override
-	public LocalDate getMinDay() {
-		return timeBounds.getMinDay();
-	}
-
-	@Override
-	public LocalDate getMaxDay() {
-		return timeBounds.getMaxDay();
-	}
-
-	@Override
-	public LocalDate getPrintStart() {
-		return timeBounds.getPrintStart();
-	}
-
-	@Override
-	public LocalDate getPrintEnd() {
-		return timeBounds.getPrintEnd();
-	}
-
-	public void setMinDay(LocalDate minDay) {
-		timeBounds.setMinDay(minDay);
-	}
-
-	public void setMaxDay(LocalDate maxDay) {
-		timeBounds.setMaxDay(maxDay);
-	}
-
-	public void setPrintStart(LocalDate printStart) {
-		timeBounds.setPrintStart(printStart);
-	}
-
-	public void setPrintEnd(LocalDate printEnd) {
-		timeBounds.setPrintEnd(printEnd);
-	}
 
 	// ========================================================================
 	// TimeScaleConfig delegation
@@ -478,30 +443,30 @@ public class GanttPreparedModel implements ToTaskDraw, TimeBounds, TimeScaleConf
 
 	public TimeScale daily() {
 		return isHideClosed()
-				? new TimeScaleDailyHideClosed(getCellWidth(), TimePoint.ofStartOfDay(getMinDay()),
-						getEffectiveScale(), getOpenClose())
-				: new TimeScaleDaily(getCellWidth(), TimePoint.ofStartOfDay(getMinDay()), getEffectiveScale(),
-						getPrintStart());
+				? new TimeScaleDailyHideClosed(getCellWidth(), TimePoint.ofStartOfDay(getTimeBounds().getMinDay()), getEffectiveScale(),
+						getOpenClose())
+				: new TimeScaleDaily(getCellWidth(), TimePoint.ofStartOfDay(getTimeBounds().getMinDay()), getEffectiveScale(),
+						getTimeBounds().getPrintStart());
 	}
 
 	public TimeScale weekly() {
-		return new TimeScaleCompressed(getCellWidth(), TimePoint.ofStartOfDay(getMinDay()), getEffectiveScale(),
-				getPrintStart());
+		return new TimeScaleCompressed(getCellWidth(), TimePoint.ofStartOfDay(getTimeBounds().getMinDay()), getEffectiveScale(),
+				getTimeBounds().getPrintStart());
 	}
 
 	public TimeScale monthly() {
-		return new TimeScaleCompressed(getCellWidth(), TimePoint.ofStartOfDay(getMinDay()), getEffectiveScale(),
-				getPrintStart());
+		return new TimeScaleCompressed(getCellWidth(), TimePoint.ofStartOfDay(getTimeBounds().getMinDay()), getEffectiveScale(),
+				getTimeBounds().getPrintStart());
 	}
 
 	public TimeScale quaterly() {
-		return new TimeScaleCompressed(getCellWidth(), TimePoint.ofStartOfDay(getMinDay()), getEffectiveScale(),
-				getPrintStart());
+		return new TimeScaleCompressed(getCellWidth(), TimePoint.ofStartOfDay(getTimeBounds().getMinDay()), getEffectiveScale(),
+				getTimeBounds().getPrintStart());
 	}
 
 	public TimeScale yearly() {
-		return new TimeScaleCompressed(getCellWidth(), TimePoint.ofStartOfDay(getMinDay()), getEffectiveScale(),
-				getPrintStart());
+		return new TimeScaleCompressed(getCellWidth(), TimePoint.ofStartOfDay(getTimeBounds().getMinDay()), getEffectiveScale(),
+				getTimeBounds().getPrintStart());
 	}
 
 	// ========================================================================
@@ -530,20 +495,20 @@ public class GanttPreparedModel implements ToTaskDraw, TimeBounds, TimeScaleConf
 
 	protected TimePoint getStartForDrawing(final Task tmp) {
 		TimePoint result;
-		if (getPrintStart() == null)
+		if (getTimeBounds().getPrintStart() == null)
 			result = tmp.getStart();
 		else
-			result = TimePoint.max(TimePoint.ofStartOfDay(getMinDay()), tmp.getStart());
+			result = TimePoint.max(TimePoint.ofStartOfDay(getTimeBounds().getMinDay()), tmp.getStart());
 
 		return result;
 	}
 
 	protected TimePoint getEndForDrawing(final Task tmp) {
 		TimePoint result;
-		if (getPrintStart() == null)
+		if (getTimeBounds().getPrintStart() == null)
 			result = tmp.getEnd();
 		else
-			result = TimePoint.min(TimePoint.ofStartOfDay(getMaxDay().plusDays(1)), tmp.getEnd());
+			result = TimePoint.min(TimePoint.ofStartOfDay(getTimeBounds().getMaxDay().plusDays(1)), tmp.getEnd());
 
 		return result;
 	}
@@ -585,9 +550,9 @@ public class GanttPreparedModel implements ToTaskDraw, TimeBounds, TimeScaleConf
 		final boolean oddStart;
 		final TimePoint startForDrawing = getStartForDrawing(task);
 		final TimePoint endForDrawing = getEndForDrawing(task);
-		if (getPrintStart() != null) {
-			oddStart = TimePoint.ofStartOfDay(getMinDay()).compareTo(startForDrawing) == 0;
-			oddEnd = TimePoint.ofStartOfDay(getMaxDay().plusDays(1)).compareTo(endForDrawing) == 0;
+		if (getTimeBounds().getPrintStart() != null) {
+			oddStart = TimePoint.ofStartOfDay(getTimeBounds().getMinDay()).compareTo(startForDrawing) == 0;
+			oddEnd = TimePoint.ofStartOfDay(getTimeBounds().getMaxDay().plusDays(1)).compareTo(endForDrawing) == 0;
 		} else {
 			oddStart = false;
 			oddEnd = false;
@@ -618,8 +583,8 @@ public class GanttPreparedModel implements ToTaskDraw, TimeBounds, TimeScaleConf
 	}
 
 	protected ResourceDraw buildResourceDraw(Resource res, TimeScale timeScale, double y) {
-		return new ResourceDrawNumbers(this, res, timeScale, y, TimePoint.ofStartOfDay(getMinDay()),
-				TimePoint.ofEndOfDayMinusOneSecond(getMaxDay()));
+		return new ResourceDrawNumbers(this, res, timeScale, y, TimePoint.ofStartOfDay(getTimeBounds().getMinDay()),
+				TimePoint.ofEndOfDayMinusOneSecond(getTimeBounds().getMaxDay()));
 	}
 
 	public void initTaskAndResourceDraws(StringBounder stringBounder, TimeHeader timeHeader) {
@@ -630,7 +595,7 @@ public class GanttPreparedModel implements ToTaskDraw, TimeBounds, TimeScaleConf
 			final TaskDraw draw;
 			if (task instanceof TaskSeparator) {
 				final TaskSeparator taskSeparator = (TaskSeparator) task;
-				draw = new TaskDrawSeparator(taskSeparator.getName(), timeScale, y, getMinDay(), getMaxDay(),
+				draw = new TaskDrawSeparator(taskSeparator.getName(), timeScale, y, getTimeBounds().getMinDay(), getTimeBounds().getMaxDay(),
 						task.getStyleBuilder(), getSkinParam());
 			} else if (task instanceof TaskGroup) {
 				final TaskGroup taskGroup = (TaskGroup) task;
@@ -638,7 +603,8 @@ public class GanttPreparedModel implements ToTaskDraw, TimeBounds, TimeScaleConf
 						getEndForDrawing(taskGroup), task, this, task.getStyleBuilder(), getSkinParam());
 			} else {
 				final TaskImpl taskImpl = (TaskImpl) task;
-				final String display = isHideResourceName() ? taskImpl.getCode().getDisplay() : taskImpl.getPrettyDisplay();
+				final String display = isHideResourceName() ? taskImpl.getCode().getDisplay()
+						: taskImpl.getPrettyDisplay();
 				if (taskImpl.isDiamond())
 					draw = new TaskDrawDiamond(timeScale, y, display, getStartForDrawing(taskImpl), taskImpl, this,
 							task.getStyleBuilder(), getSkinParam());
@@ -669,13 +635,13 @@ public class GanttPreparedModel implements ToTaskDraw, TimeBounds, TimeScaleConf
 	}
 
 	public boolean isHidden(Task task) {
-		if (getPrintStart() == null || task instanceof TaskSeparator)
+		if (getTimeBounds().getPrintStart() == null || task instanceof TaskSeparator)
 			return false;
 
-		if (task.getEndMinusOneDayTOBEREMOVED().compareTo(TimePoint.ofStartOfDay(getMinDay())) < 0)
+		if (task.getEndMinusOneDayTOBEREMOVED().compareTo(TimePoint.ofStartOfDay(getTimeBounds().getMinDay())) < 0)
 			return true;
 
-		if (task.getStart().compareTo(TimePoint.ofEndOfDayMinusOneSecond(getMaxDay())) > 0)
+		if (task.getStart().compareTo(TimePoint.ofEndOfDayMinusOneSecond(getTimeBounds().getMaxDay())) > 0)
 			return true;
 
 		return false;

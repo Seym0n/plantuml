@@ -37,35 +37,30 @@ package net.sourceforge.plantuml.project.data;
 
 import java.time.LocalDate;
 
-import net.sourceforge.plantuml.project.TimeBounds;
 import net.sourceforge.plantuml.project.time.TimePoint;
 
 /**
  * Value object containing the time bounds of a Gantt diagram.
  */
-public class TimeBoundsData implements TimeBounds {
+public class TimeBoundsData {
 
 	private LocalDate minDay = TimePoint.epoch();
 	private LocalDate maxDay;
 	private LocalDate printStart;
 	private LocalDate printEnd;
 
-	@Override
 	public LocalDate getMinDay() {
 		return minDay;
 	}
 
-	@Override
 	public LocalDate getMaxDay() {
 		return maxDay;
 	}
 
-	@Override
 	public LocalDate getPrintStart() {
 		return printStart;
 	}
 
-	@Override
 	public LocalDate getPrintEnd() {
 		return printEnd;
 	}

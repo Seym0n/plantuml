@@ -82,11 +82,11 @@ public abstract class TimeHeader {
 	}
 
 	protected final LocalDate getMinDay() {
-		return model.getMinDay();
+		return model.getTimeBounds().getMinDay();
 	}
 
 	protected final LocalDate getMaxDay() {
-		return model.getMaxDay();
+		return model.getTimeBounds().getMaxDay();
 	}
 
 	protected final HColor closedBackgroundColor() {
@@ -120,8 +120,8 @@ public abstract class TimeHeader {
 	}
 
 	protected final void drawHline(UGraphic ug, double y) {
-		final double xmin = getTimeScale().getPosition(TimePoint.ofStartOfDay(model.getMinDay()));
-		final double xmax = getTimeScale().getPosition(TimePoint.ofEndOfDayMinusOneSecond(model.getMaxDay()));
+		final double xmin = getTimeScale().getPosition(TimePoint.ofStartOfDay(model.getTimeBounds().getMinDay()));
+		final double xmax = getTimeScale().getPosition(TimePoint.ofEndOfDayMinusOneSecond(model.getTimeBounds().getMaxDay()));
 		final ULine hline = ULine.hline(xmax - xmin);
 		ug.apply(getLineColor()).apply(UTranslate.dy(y)).draw(hline);
 	}

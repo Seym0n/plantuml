@@ -142,8 +142,8 @@ public class GanttDiagramMainBlock extends AbstractTextBlock {
 
 	private void drawConstraints(final UGraphic ug, TimeScale timeScale) {
 		for (GanttConstraint constraint : model.getModelData().getConstraints()) {
-			if (model.getPrintStart() != null && constraint.isHidden(TimePoint.ofStartOfDay(model.getMinDay()),
-					TimePoint.ofEndOfDayMinusOneSecond(model.getMaxDay())))
+			if (model.getTimeBounds().getPrintStart() != null && constraint.isHidden(TimePoint.ofStartOfDay(model.getTimeBounds().getMinDay()),
+					TimePoint.ofEndOfDayMinusOneSecond(model.getTimeBounds().getMaxDay())))
 				continue;
 
 			constraint.getUDrawable(timeScale, model).drawU(ug);

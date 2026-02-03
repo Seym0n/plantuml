@@ -85,8 +85,8 @@ public final class GanttLayout {
 	}
 
 	private double getBarsColumnWidth(GanttPreparedModel model, TimeHeader timeHeader) {
-		final double xmin = timeHeader.getTimeScale().getPosition(TimePoint.ofStartOfDay(model.getMinDay()));
-		final double xmax = timeHeader.getTimeScale().getPosition(TimePoint.ofEndOfDayMinusOneSecond(model.getMaxDay()));
+		final double xmin = timeHeader.getTimeScale().getPosition(TimePoint.ofStartOfDay(model.getTimeBounds().getMinDay()));
+		final double xmax = timeHeader.getTimeScale().getPosition(TimePoint.ofEndOfDayMinusOneSecond(model.getTimeBounds().getMaxDay()));
 		return xmax - xmin;
 	}
 }

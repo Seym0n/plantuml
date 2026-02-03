@@ -172,13 +172,13 @@ public class GanttDiagram extends TitledDiagram implements ToTaskDraw, WithSprit
 	@Override
 	protected TextBlock getTextMainBlock(FileFormatOption fileFormatOption) {
 		final StringBounder stringBounder = fileFormatOption.getDefaultStringBounder(getSkinParam());
-		if (model.getPrintStart() == null) {
+		if (model.getTimeBounds().getPrintStart() == null) {
 			initMinMax();
 		} else {
-			model.setMinDay(model.getPrintStart());
-			model.setMaxDay(model.getPrintEnd());
+			model.getTimeBounds().setMinDay(model.getTimeBounds().getPrintStart());
+			model.getTimeBounds().setMaxDay(model.getTimeBounds().getPrintEnd());
 		}
-		final TimeHeader timeHeader = model.getMinDay().equals(TimePoint.epoch())
+		final TimeHeader timeHeader = model.getTimeBounds().getMinDay().equals(TimePoint.epoch())
 				? new TimeHeaderSimple(model, stringBounder)
 				: model.buildTimeHeader();
 
@@ -188,26 +188,26 @@ public class GanttDiagram extends TitledDiagram implements ToTaskDraw, WithSprit
 
 	private void initMinMax() {
 		if (model.getModelData().getTasks().isEmpty()) {
-			model.setMaxDay(model.getMinDay());
+			model.getTimeBounds().setMaxDay(model.getTimeBounds().getMinDay());
 		} else {
-			model.setMaxDay(null);
+			model.getTimeBounds().setMaxDay(null);
 			for (Task task : model.getModelData().getTasks()) {
 				if (task instanceof TaskSeparator || task instanceof TaskGroup)
 					continue;
 
 				final TimePoint tmp = task.getEnd().minusOneSecond();
-				if (model.getMaxDay() == null || model.getMaxDay().compareTo(tmp.toDay()) < 0)
-					model.setMaxDay(tmp.toDay());
+				if (model.getTimeBounds().getMaxDay() == null || model.getTimeBounds().getMaxDay().compareTo(tmp.toDay()) < 0)
+					model.getTimeBounds().setMaxDay(tmp.toDay());
 			}
 		}
 
 		for (TimePoint d : model.getColorDays().keySet())
-			if (d.toDay().compareTo(model.getMaxDay()) > 0)
-				model.setMaxDay(d.toDay());
+			if (d.toDay().compareTo(model.getTimeBounds().getMaxDay()) > 0)
+				model.getTimeBounds().setMaxDay(d.toDay());
 
 		for (TimePoint d : model.getNameDays().keySet())
-			if (d.toDay().compareTo(model.getMaxDay()) > 0)
-				model.setMaxDay(d.toDay());
+			if (d.toDay().compareTo(model.getTimeBounds().getMaxDay()) > 0)
+				model.getTimeBounds().setMaxDay(d.toDay());
 	}
 
 	@Override
@@ -263,7 +263,7 @@ public class GanttDiagram extends TitledDiagram implements ToTaskDraw, WithSprit
 	}
 
 	public TimePoint getThenDate() {
-		TimePoint result = TimePoint.ofStartOfDay(model.getMinDay());
+		TimePoint result = TimePoint.ofStartOfDay(model.getTimeBounds().getMinDay());
 		for (TimePoint d : model.getColorDays().keySet())
 			if (d.compareTo(result) > 0)
 				result = d;
@@ -297,7 +297,7 @@ public class GanttDiagram extends TitledDiagram implements ToTaskDraw, WithSprit
 				previous = getLastCreatedTask();
 
 			result = new TaskImpl(this, getSkinParam().getCurrentStyleBuilder(), code,
-					TimePoint.ofStartOfDay(model.getMinDay()), defaultCompletion);
+					TimePoint.ofStartOfDay(model.getTimeBounds().getMinDay()), defaultCompletion);
 			if (currentGroup != null)
 				currentGroup.addTask(result);
 
@@ -357,26 +357,26 @@ public class GanttDiagram extends TitledDiagram implements ToTaskDraw, WithSprit
 		if (model.getModelData().getTasks().size() > 0)
 			return CommandExecutionResult.error("Starting point must be set before task definition");
 
-		model.setMinDay(start);
+		model.getTimeBounds().setMinDay(start);
 		return CommandExecutionResult.ok();
 	}
 
 	public LocalDate getMinDay() {
-		return model.getMinDay();
+		return model.getTimeBounds().getMinDay();
 	}
 
 	public LocalDate getMaxDay() {
 		initMinMax();
-		return model.getMaxDay();
+		return model.getTimeBounds().getMaxDay();
 	}
 
 	public TimePoint getMinTimePoint() {
-		return TimePoint.ofStartOfDay(model.getMinDay());
+		return TimePoint.ofStartOfDay(model.getTimeBounds().getMinDay());
 	}
 
 	public TimePoint getMaxTimePoint() {
 		initMinMax();
-		return TimePoint.ofStartOfDay(model.getMaxDay());
+		return TimePoint.ofStartOfDay(model.getTimeBounds().getMaxDay());
 	}
 
 	public int daysInWeek() {
@@ -493,8 +493,8 @@ public class GanttDiagram extends TitledDiagram implements ToTaskDraw, WithSprit
 	}
 
 	public void setPrintInterval(LocalDate start, LocalDate end) {
-		model.setPrintStart(start);
-		model.setPrintEnd(end);
+		model.getTimeBounds().setPrintStart(start);
+		model.getTimeBounds().setPrintEnd(end);
 	}
 
 	public CommandExecutionResult addNote(Display note, Stereotype stereotype) {
