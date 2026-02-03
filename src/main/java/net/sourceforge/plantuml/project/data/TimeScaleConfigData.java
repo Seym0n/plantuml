@@ -35,34 +35,29 @@
  */
 package net.sourceforge.plantuml.project.data;
 
-import net.sourceforge.plantuml.project.TimeScaleConfig;
 import net.sourceforge.plantuml.project.core.PrintScale;
 
 /**
  * Value object containing the time scale configuration.
  */
-public class TimeScaleConfigData implements TimeScaleConfig {
+public class TimeScaleConfigData {
 
 	private PrintScale printScale = PrintScale.DAILY;
 	private double factorScale = 1.0;
 	private boolean hideClosed;
 
-	@Override
 	public PrintScale getPrintScale() {
 		return printScale;
 	}
 
-	@Override
 	public double getFactorScale() {
 		return factorScale;
 	}
 
-	@Override
 	public double getEffectiveScale() {
 		return printScale.getDefaultScale() * factorScale;
 	}
 
-	@Override
 	public boolean isHideClosed() {
 		return hideClosed;
 	}

@@ -167,7 +167,7 @@ public class TimeHeaderDaily extends TimeHeaderCalendar {
 	}
 
 	private boolean isHidden(TimePoint wink) {
-		if (model.isHideClosed() && model.getOpenClose().isClosed(wink.toDay()))
+		if (model.getScaleConfig().isHideClosed() && model.getOpenClose().isClosed(wink.toDay()))
 			return true;
 		return false;
 	}

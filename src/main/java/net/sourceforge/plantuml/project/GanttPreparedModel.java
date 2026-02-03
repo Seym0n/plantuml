@@ -95,8 +95,8 @@ import net.sourceforge.plantuml.skin.Pragma;
 import net.sourceforge.plantuml.style.ISkinParam;
 import net.sourceforge.plantuml.style.SName;
 
-public class GanttPreparedModel implements ToTaskDraw, TimeScaleConfig, WeekConfig, DayCalendar, DisplayConfig,
-		TimelineStyle, VerticalSeparators, TaskDrawRegistry, LocaleProvider {
+public class GanttPreparedModel implements ToTaskDraw, DayCalendar, DisplayConfig, TimelineStyle,
+		VerticalSeparators, TaskDrawRegistry, LocaleProvider {
 
 	// ========================================================================
 	// Value objects
@@ -114,7 +114,25 @@ public class GanttPreparedModel implements ToTaskDraw, TimeScaleConfig, WeekConf
 	}
 
 	private final TimeScaleConfigData scaleConfig = new TimeScaleConfigData();
+
+	public TimeScaleConfigData getScaleConfig() {
+		return scaleConfig;
+	}
+
 	private final WeekConfigData weekConfig = new WeekConfigData();
+
+	public WeekConfigData getWeekConfig() {
+		return weekConfig;
+	}
+
+	public DayCalendarData getDayCalendar() {
+		return dayCalendar;
+	}
+
+	public DisplayConfigData getDisplayConfig() {
+		return displayConfig;
+	}
+
 	private final DayCalendarData dayCalendar = new DayCalendarData();
 	private final DisplayConfigData displayConfig = new DisplayConfigData();
 	private final TimelineStyleData timelineStyle;
@@ -143,77 +161,6 @@ public class GanttPreparedModel implements ToTaskDraw, TimeScaleConfig, WeekConf
 		this.timelineStyle = new TimelineStyleData(ganttStyle, HColorSet.instance());
 	}
 
-
-	// ========================================================================
-	// TimeScaleConfig delegation
-	// ========================================================================
-
-	@Override
-	public PrintScale getPrintScale() {
-		return scaleConfig.getPrintScale();
-	}
-
-	@Override
-	public double getFactorScale() {
-		return scaleConfig.getFactorScale();
-	}
-
-	@Override
-	public double getEffectiveScale() {
-		return scaleConfig.getEffectiveScale();
-	}
-
-	@Override
-	public boolean isHideClosed() {
-		return scaleConfig.isHideClosed();
-	}
-
-	public void setPrintScale(PrintScale printScale) {
-		scaleConfig.setPrintScale(printScale);
-	}
-
-	public void setFactorScale(double factorScale) {
-		scaleConfig.setFactorScale(factorScale);
-	}
-
-	public void setHideClosed(boolean hideClosed) {
-		scaleConfig.setHideClosed(hideClosed);
-	}
-
-	// ========================================================================
-	// WeekConfig delegation
-	// ========================================================================
-
-	@Override
-	public WeekNumberStrategy getWeekNumberStrategy() {
-		return weekConfig.getWeekNumberStrategy();
-	}
-
-	@Override
-	public WeeklyHeaderStrategy getWeeklyHeaderStrategy() {
-		return weekConfig.getWeeklyHeaderStrategy();
-	}
-
-	@Override
-	public int getWeekStartingNumber() {
-		return weekConfig.getWeekStartingNumber();
-	}
-
-	public void setWeekNumberStrategy(WeekNumberStrategy weekNumberStrategy) {
-		weekConfig.setWeekNumberStrategy(weekNumberStrategy);
-	}
-
-	public void setWeeklyHeaderStrategy(WeeklyHeaderStrategy weeklyHeaderStrategy) {
-		weekConfig.setWeeklyHeaderStrategy(weeklyHeaderStrategy);
-	}
-
-	public void setWeekStartingNumber(int weekStartingNumber) {
-		weekConfig.setWeekStartingNumber(weekStartingNumber);
-	}
-
-	// ========================================================================
-	// LocaleProvider delegation
-	// ========================================================================
 
 	@Override
 	public Locale getLocale() {
@@ -438,35 +385,36 @@ public class GanttPreparedModel implements ToTaskDraw, TimeScaleConfig, WeekConf
 	// ========================================================================
 
 	public TimeScale simple() {
-		return new TimeScaleWink(getCellWidth(), getEffectiveScale(), getPrintScale());
+		return new TimeScaleWink(getCellWidth(), getScaleConfig().getEffectiveScale(),
+				getScaleConfig().getPrintScale());
 	}
 
 	public TimeScale daily() {
-		return isHideClosed()
-				? new TimeScaleDailyHideClosed(getCellWidth(), TimePoint.ofStartOfDay(getTimeBounds().getMinDay()), getEffectiveScale(),
-						getOpenClose())
-				: new TimeScaleDaily(getCellWidth(), TimePoint.ofStartOfDay(getTimeBounds().getMinDay()), getEffectiveScale(),
-						getTimeBounds().getPrintStart());
+		return getScaleConfig().isHideClosed()
+				? new TimeScaleDailyHideClosed(getCellWidth(), TimePoint.ofStartOfDay(getTimeBounds().getMinDay()),
+						getScaleConfig().getEffectiveScale(), getOpenClose())
+				: new TimeScaleDaily(getCellWidth(), TimePoint.ofStartOfDay(getTimeBounds().getMinDay()),
+						getScaleConfig().getEffectiveScale(), getTimeBounds().getPrintStart());
 	}
 
 	public TimeScale weekly() {
-		return new TimeScaleCompressed(getCellWidth(), TimePoint.ofStartOfDay(getTimeBounds().getMinDay()), getEffectiveScale(),
-				getTimeBounds().getPrintStart());
+		return new TimeScaleCompressed(getCellWidth(), TimePoint.ofStartOfDay(getTimeBounds().getMinDay()),
+				getScaleConfig().getEffectiveScale(), getTimeBounds().getPrintStart());
 	}
 
 	public TimeScale monthly() {
-		return new TimeScaleCompressed(getCellWidth(), TimePoint.ofStartOfDay(getTimeBounds().getMinDay()), getEffectiveScale(),
-				getTimeBounds().getPrintStart());
+		return new TimeScaleCompressed(getCellWidth(), TimePoint.ofStartOfDay(getTimeBounds().getMinDay()),
+				getScaleConfig().getEffectiveScale(), getTimeBounds().getPrintStart());
 	}
 
 	public TimeScale quaterly() {
-		return new TimeScaleCompressed(getCellWidth(), TimePoint.ofStartOfDay(getTimeBounds().getMinDay()), getEffectiveScale(),
-				getTimeBounds().getPrintStart());
+		return new TimeScaleCompressed(getCellWidth(), TimePoint.ofStartOfDay(getTimeBounds().getMinDay()),
+				getScaleConfig().getEffectiveScale(), getTimeBounds().getPrintStart());
 	}
 
 	public TimeScale yearly() {
-		return new TimeScaleCompressed(getCellWidth(), TimePoint.ofStartOfDay(getTimeBounds().getMinDay()), getEffectiveScale(),
-				getTimeBounds().getPrintStart());
+		return new TimeScaleCompressed(getCellWidth(), TimePoint.ofStartOfDay(getTimeBounds().getMinDay()),
+				getScaleConfig().getEffectiveScale(), getTimeBounds().getPrintStart());
 	}
 
 	// ========================================================================
@@ -474,7 +422,7 @@ public class GanttPreparedModel implements ToTaskDraw, TimeScaleConfig, WeekConf
 	// ========================================================================
 
 	public TimeHeader buildTimeHeader() {
-		final PrintScale scale = getPrintScale();
+		final PrintScale scale = getScaleConfig().getPrintScale();
 		if (scale == PrintScale.DAILY)
 			return new TimeHeaderDaily(this);
 		else if (scale == PrintScale.WEEKLY)
@@ -595,8 +543,8 @@ public class GanttPreparedModel implements ToTaskDraw, TimeScaleConfig, WeekConf
 			final TaskDraw draw;
 			if (task instanceof TaskSeparator) {
 				final TaskSeparator taskSeparator = (TaskSeparator) task;
-				draw = new TaskDrawSeparator(taskSeparator.getName(), timeScale, y, getTimeBounds().getMinDay(), getTimeBounds().getMaxDay(),
-						task.getStyleBuilder(), getSkinParam());
+				draw = new TaskDrawSeparator(taskSeparator.getName(), timeScale, y, getTimeBounds().getMinDay(),
+						getTimeBounds().getMaxDay(), task.getStyleBuilder(), getSkinParam());
 			} else if (task instanceof TaskGroup) {
 				final TaskGroup taskGroup = (TaskGroup) task;
 				draw = new TaskDrawGroup(timeScale, y, taskGroup.getCode().getDisplay(), getStartForDrawing(taskGroup),

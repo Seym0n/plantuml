@@ -39,14 +39,13 @@ import java.time.DayOfWeek;
 import java.util.Locale;
 
 import net.sourceforge.plantuml.project.LocaleProvider;
-import net.sourceforge.plantuml.project.WeekConfig;
 import net.sourceforge.plantuml.project.draw.WeeklyHeaderStrategy;
 import net.sourceforge.plantuml.project.time.WeekNumberStrategy;
 
 /**
  * Value object containing week-related configuration and locale.
  */
-public class WeekConfigData implements WeekConfig, LocaleProvider {
+public class WeekConfigData implements LocaleProvider {
 
 	private Locale locale = Locale.ENGLISH;
 
@@ -55,22 +54,18 @@ public class WeekConfigData implements WeekConfig, LocaleProvider {
 	private WeeklyHeaderStrategy weeklyHeaderStrategy;
 	private int weekStartingNumber;
 
-	@Override
 	public WeekNumberStrategy getWeekNumberStrategy() {
 		return weekNumberStrategy;
 	}
 
-	@Override
 	public WeeklyHeaderStrategy getWeeklyHeaderStrategy() {
 		return weeklyHeaderStrategy;
 	}
 
-	@Override
 	public int getWeekStartingNumber() {
 		return weekStartingNumber;
 	}
 
-	@Override
 	public Locale getLocale() {
 		return locale;
 	}

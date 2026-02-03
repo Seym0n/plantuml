@@ -133,7 +133,7 @@ public class GanttDiagram extends TitledDiagram implements ToTaskDraw, WithSprit
 	}
 
 	public void setWeekNumberStrategy(DayOfWeek firstDayOfWeek, int minimalDaysInFirstWeek) {
-		model.setWeekNumberStrategy(new WeekNumberStrategy(firstDayOfWeek, minimalDaysInFirstWeek));
+		model.getWeekConfig().setWeekNumberStrategy(new WeekNumberStrategy(firstDayOfWeek, minimalDaysInFirstWeek));
 	}
 
 	public GanttDiagram(UmlSource source, PreprocessingArtifact preprocessing) {
@@ -152,11 +152,11 @@ public class GanttDiagram extends TitledDiagram implements ToTaskDraw, WithSprit
 	}
 
 	public void setPrintScale(PrintScale printScale) {
-		model.setPrintScale(printScale);
+		model.getScaleConfig().setPrintScale(printScale);
 	}
 
 	public void setFactorScale(double factorScale) {
-		model.setFactorScale(factorScale);
+		model.getScaleConfig().setFactorScale(factorScale);
 	}
 
 	@Override
@@ -522,8 +522,8 @@ public class GanttDiagram extends TitledDiagram implements ToTaskDraw, WithSprit
 	}
 
 	public void setWeeklyHeaderStrategy(WeeklyHeaderStrategy weeklyHeaderStrategy, int weekStartingNumber) {
-		model.setWeeklyHeaderStrategy(weeklyHeaderStrategy);
-		model.setWeekStartingNumber(weekStartingNumber);
+		model.getWeekConfig().setWeeklyHeaderStrategy(weeklyHeaderStrategy);
+		model.getWeekConfig().setWeekStartingNumber(weekStartingNumber);
 	}
 
 	public CommandExecutionResult hideResourceName() {
@@ -572,7 +572,7 @@ public class GanttDiagram extends TitledDiagram implements ToTaskDraw, WithSprit
 	}
 
 	public void setHideClosed(boolean hideClosed) {
-		model.setHideClosed(hideClosed);
+		model.getScaleConfig().setHideClosed(hideClosed);
 	}
 
 	@Override
