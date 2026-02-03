@@ -95,13 +95,18 @@ import net.sourceforge.plantuml.skin.Pragma;
 import net.sourceforge.plantuml.style.ISkinParam;
 import net.sourceforge.plantuml.style.SName;
 
-public class GanttPreparedModel implements ToTaskDraw, GanttModel, TimeBounds, TimeScaleConfig,
+public class GanttPreparedModel implements ToTaskDraw, TimeBounds, TimeScaleConfig,
 		WeekConfig, DayCalendar, DisplayConfig, TimelineStyle, VerticalSeparators, TaskDrawRegistry, LocaleProvider {
 
 	// ========================================================================
 	// Value objects
 	// ========================================================================
 	private final GanttModelData modelData = new GanttModelData();
+	
+	public GanttModelData getModelData() {
+		return modelData;
+	}
+
 	private final TimeBoundsData timeBounds = new TimeBoundsData();
 	private final TimeScaleConfigData scaleConfig = new TimeScaleConfigData();
 	private final WeekConfigData weekConfig = new WeekConfigData();
@@ -137,44 +142,6 @@ public class GanttPreparedModel implements ToTaskDraw, GanttModel, TimeBounds, T
 	// GanttModel delegation
 	// ========================================================================
 
-	@Override
-	public Collection<Task> getTasks() {
-		return modelData.getTasks();
-	}
-
-	@Override
-	public Collection<Resource> getResources() {
-		return modelData.getResources();
-	}
-
-	@Override
-	public Collection<GanttConstraint> getConstraints() {
-		return modelData.getConstraints();
-	}
-
-	public void addConstraint(GanttConstraint constraint) {
-		modelData.addConstraint(constraint);
-	}
-
-	public void putTask(TaskCode code, Task task) {
-		modelData.putTask(code, task);
-	}
-
-	public Task getTask(TaskCode code) {
-		return modelData.getTask(code);
-	}
-
-	public void putResource(String name, Resource resource) {
-		modelData.putResource(name, resource);
-	}
-
-	public Resource getResource(String name) {
-		return modelData.getResource(name);
-	}
-
-	// ========================================================================
-	// TimeBounds delegation
-	// ========================================================================
 
 	@Override
 	public LocalDate getMinDay() {
@@ -631,7 +598,7 @@ public class GanttPreparedModel implements ToTaskDraw, GanttModel, TimeBounds, T
 
 	private Collection<GanttConstraint> getConstraintsForTask(Task task) {
 		final List<GanttConstraint> result = new ArrayList<>();
-		for (GanttConstraint constraint : getConstraints())
+		for (GanttConstraint constraint : getModelData().getConstraints())
 			if (constraint.isOn(task))
 				result.add(constraint);
 
@@ -640,7 +607,7 @@ public class GanttPreparedModel implements ToTaskDraw, GanttModel, TimeBounds, T
 
 	public int getLoadForResource(Resource res, TimePoint i) {
 		int result = 0;
-		for (Task task : getTasks()) {
+		for (Task task : getModelData().getTasks()) {
 			if (task instanceof TaskSeparator)
 				continue;
 
@@ -659,7 +626,7 @@ public class GanttPreparedModel implements ToTaskDraw, GanttModel, TimeBounds, T
 		final TimeScale timeScale = timeHeader.getTimeScale();
 		final double fullHeaderHeight = timeHeader.getFullHeaderHeight(stringBounder);
 		Real y = origin.addFixed(fullHeaderHeight);
-		for (Task task : getTasks()) {
+		for (Task task : getModelData().getTasks()) {
 			final TaskDraw draw;
 			if (task instanceof TaskSeparator) {
 				final TaskSeparator taskSeparator = (TaskSeparator) task;
@@ -692,7 +659,7 @@ public class GanttPreparedModel implements ToTaskDraw, GanttModel, TimeBounds, T
 		if (yy == 0) {
 			yy = fullHeaderHeight;
 		} else if (isHideResourceFootbox() == false)
-			for (Resource res : getResources()) {
+			for (Resource res : getModelData().getResources()) {
 				final ResourceDraw draw = buildResourceDraw(res, timeScale, yy);
 				res.setTaskDraw(draw);
 				yy += draw.getHeight(stringBounder);

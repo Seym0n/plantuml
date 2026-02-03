@@ -59,7 +59,7 @@ public final class GanttLayout {
 			computedTitlesWidth = 0;
 		} else {
 			double w = 0;
-			for (Task task : model.getTasks()) {
+			for (Task task : model.getModelData().getTasks()) {
 				if (model.isHidden(task))
 					continue;
 

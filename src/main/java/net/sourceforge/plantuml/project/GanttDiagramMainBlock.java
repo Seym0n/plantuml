@@ -130,7 +130,7 @@ public class GanttDiagramMainBlock extends AbstractTextBlock {
 	}
 
 	private void drawTasksRect(UGraphic ug) {
-		for (Task task : model.getTasks()) {
+		for (Task task : model.getModelData().getTasks()) {
 			if (model.isHidden(task))
 				continue;
 
@@ -141,7 +141,7 @@ public class GanttDiagramMainBlock extends AbstractTextBlock {
 	}
 
 	private void drawConstraints(final UGraphic ug, TimeScale timeScale) {
-		for (GanttConstraint constraint : model.getConstraints()) {
+		for (GanttConstraint constraint : model.getModelData().getConstraints()) {
 			if (model.getPrintStart() != null && constraint.isHidden(TimePoint.ofStartOfDay(model.getMinDay()),
 					TimePoint.ofEndOfDayMinusOneSecond(model.getMaxDay())))
 				continue;
@@ -152,7 +152,7 @@ public class GanttDiagramMainBlock extends AbstractTextBlock {
 	}
 
 	private void drawTasksTitle(UGraphic ug, double colTitles, double colBars) {
-		for (Task task : model.getTasks()) {
+		for (Task task : model.getModelData().getTasks()) {
 			if (model.isHidden(task))
 				continue;
 
@@ -163,7 +163,7 @@ public class GanttDiagramMainBlock extends AbstractTextBlock {
 	}
 
 	private void drawResources(UGraphic ug) {
-		for (Resource res : model.getResources()) {
+		for (Resource res : model.getModelData().getResources()) {
 			final ResourceDraw draw = res.getResourceDraw();
 			final UTranslate move = UTranslate.dy(draw.getY());
 			draw.drawU(ug.apply(move));

@@ -43,7 +43,6 @@ import java.util.List;
 import java.util.Map;
 
 import net.sourceforge.plantuml.project.GanttConstraint;
-import net.sourceforge.plantuml.project.GanttModel;
 import net.sourceforge.plantuml.project.core.Resource;
 import net.sourceforge.plantuml.project.core.Task;
 import net.sourceforge.plantuml.project.core.TaskCode;
@@ -52,23 +51,20 @@ import net.sourceforge.plantuml.project.core.TaskCode;
  * Value object containing the core domain data of a Gantt diagram:
  * tasks, resources, and constraints.
  */
-public class GanttModelData implements GanttModel {
+public class GanttModelData {
 
 	private final List<GanttConstraint> constraints = new ArrayList<>();
 	private final Map<TaskCode, Task> tasks = new LinkedHashMap<>();
 	private final Map<String, Resource> resources = new LinkedHashMap<>();
 
-	@Override
 	public Collection<Task> getTasks() {
 		return Collections.unmodifiableCollection(tasks.values());
 	}
 
-	@Override
 	public Collection<Resource> getResources() {
 		return Collections.unmodifiableCollection(resources.values());
 	}
 
-	@Override
 	public Collection<GanttConstraint> getConstraints() {
 		return Collections.unmodifiableCollection(constraints);
 	}

@@ -187,11 +187,11 @@ public class GanttDiagram extends TitledDiagram implements ToTaskDraw, WithSprit
 	}
 
 	private void initMinMax() {
-		if (model.getTasks().isEmpty()) {
+		if (model.getModelData().getTasks().isEmpty()) {
 			model.setMaxDay(model.getMinDay());
 		} else {
 			model.setMaxDay(null);
-			for (Task task : model.getTasks()) {
+			for (Task task : model.getModelData().getTasks()) {
 				if (task instanceof TaskSeparator || task instanceof TaskGroup)
 					continue;
 
@@ -277,7 +277,7 @@ public class GanttDiagram extends TitledDiagram implements ToTaskDraw, WithSprit
 
 	public Task getExistingTask(String id) {
 		final TaskCode code = TaskCode.fromId(Objects.requireNonNull(id));
-		return model.getTask(code);
+		return model.getModelData().getTask(code);
 	}
 
 	public GanttConstraint forceTaskOrder(Task task1, Task task2) {
@@ -290,7 +290,7 @@ public class GanttDiagram extends TitledDiagram implements ToTaskDraw, WithSprit
 	}
 
 	public Task getOrCreateTask(TaskCode code, boolean linkedToPrevious) {
-		Task result = model.getTask(Objects.requireNonNull(code));
+		Task result = model.getModelData().getTask(Objects.requireNonNull(code));
 		if (result == null) {
 			Task previous = null;
 			if (linkedToPrevious)
@@ -301,7 +301,7 @@ public class GanttDiagram extends TitledDiagram implements ToTaskDraw, WithSprit
 			if (currentGroup != null)
 				currentGroup.addTask(result);
 
-			model.putTask(code, result);
+			model.getModelData().putTask(code, result);
 
 			if (previous != null)
 				forceTaskOrder(previous, result);
@@ -315,7 +315,7 @@ public class GanttDiagram extends TitledDiagram implements ToTaskDraw, WithSprit
 	}
 
 	private Task getLastCreatedTask() {
-		final List<Task> all = new ArrayList<>(model.getTasks());
+		final List<Task> all = new ArrayList<>(model.getModelData().getTasks());
 		for (int i = all.size() - 1; i >= 0; i--)
 			if (all.get(i) instanceof TaskImpl)
 				return all.get(i);
@@ -325,8 +325,8 @@ public class GanttDiagram extends TitledDiagram implements ToTaskDraw, WithSprit
 
 	public void addSeparator(String comment) {
 		TaskSeparator separator = new TaskSeparator(getSkinParam().getCurrentStyleBuilder(), comment,
-				model.getTasks().size());
-		model.putTask(separator.getCode(), separator);
+				model.getModelData().getTasks().size());
+		model.getModelData().putTask(separator.getCode(), separator);
 	}
 
 	public CommandExecutionResult addGroup(TaskCode code) {
@@ -336,7 +336,7 @@ public class GanttDiagram extends TitledDiagram implements ToTaskDraw, WithSprit
 			this.currentGroup.addTask(group);
 
 		this.currentGroup = group;
-		model.putTask(group.getCode(), group);
+		model.getModelData().putTask(group.getCode(), group);
 		return CommandExecutionResult.ok();
 	}
 
@@ -350,11 +350,11 @@ public class GanttDiagram extends TitledDiagram implements ToTaskDraw, WithSprit
 	}
 
 	public void addContraint(GanttConstraint constraint) {
-		model.addConstraint(constraint);
+		model.getModelData().addConstraint(constraint);
 	}
 
 	public CommandExecutionResult updateStartingPoint(LocalDate start) {
-		if (model.getTasks().size() > 0)
+		if (model.getModelData().getTasks().size() > 0)
 			return CommandExecutionResult.error("Starting point must be set before task definition");
 
 		model.setMinDay(start);
@@ -409,11 +409,11 @@ public class GanttDiagram extends TitledDiagram implements ToTaskDraw, WithSprit
 	}
 
 	public Resource getResource(String resourceName) {
-		Resource resource = model.getResource(resourceName);
+		Resource resource = model.getModelData().getResource(resourceName);
 		if (resource == null)
 			resource = new Resource(resourceName);
 
-		model.putResource(resourceName, resource);
+		model.getModelData().putResource(resourceName, resource);
 		return resource;
 	}
 
@@ -499,7 +499,7 @@ public class GanttDiagram extends TitledDiagram implements ToTaskDraw, WithSprit
 
 	public CommandExecutionResult addNote(Display note, Stereotype stereotype) {
 		Task last = null;
-		for (Task current : model.getTasks())
+		for (Task current : model.getModelData().getTasks())
 			last = current;
 		if (last == null)
 			return CommandExecutionResult.error("No task defined");
@@ -546,7 +546,7 @@ public class GanttDiagram extends TitledDiagram implements ToTaskDraw, WithSprit
 
 	public List<TaskDrawRegular> getAllTasksForResource(Resource res) {
 		final List<TaskDrawRegular> result = new ArrayList<TaskDrawRegular>();
-		for (Task task : model.getTasks())
+		for (Task task : model.getModelData().getTasks())
 			if (task.isAssignedTo(res)) {
 				final TaskDrawRegular draw = (TaskDrawRegular) model.getTaskDraw(task);
 				result.add(draw);
