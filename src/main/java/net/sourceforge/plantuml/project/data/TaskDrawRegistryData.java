@@ -38,18 +38,16 @@ package net.sourceforge.plantuml.project.data;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import net.sourceforge.plantuml.project.TaskDrawRegistry;
 import net.sourceforge.plantuml.project.core.Task;
 import net.sourceforge.plantuml.project.draw.TaskDraw;
 
 /**
  * Value object containing the mapping from Task to TaskDraw.
  */
-public class TaskDrawRegistryData implements TaskDrawRegistry {
+public class TaskDrawRegistryData {
 
 	private final Map<Task, TaskDraw> draws = new LinkedHashMap<>();
 
-	@Override
 	public TaskDraw getTaskDraw(Task task) {
 		return draws.get(task);
 	}

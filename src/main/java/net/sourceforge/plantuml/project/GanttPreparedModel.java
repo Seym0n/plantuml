@@ -92,7 +92,7 @@ import net.sourceforge.plantuml.skin.Pragma;
 import net.sourceforge.plantuml.style.ISkinParam;
 import net.sourceforge.plantuml.style.SName;
 
-public class GanttPreparedModel implements ToTaskDraw, TimelineStyle, TaskDrawRegistry {
+public class GanttPreparedModel implements ToTaskDraw, TimelineStyle {
 
 	// ========================================================================
 	// Value objects
@@ -139,13 +139,17 @@ public class GanttPreparedModel implements ToTaskDraw, TimelineStyle, TaskDrawRe
 		return separators;
 	}
 
+	private final TaskDrawRegistryData drawRegistry = new TaskDrawRegistryData();
+
 	public TaskDrawRegistryData getDrawRegistry() {
 		return drawRegistry;
 	}
 
-	private final TaskDrawRegistryData drawRegistry = new TaskDrawRegistryData();
-
 	private final TimelineStyleData timelineStyle;
+
+	public TimelineStyleData getTimelineStyle() {
+		return timelineStyle;
+	}
 
 	// ========================================================================
 	// Layout / origin (internal, not in value objects)
@@ -228,18 +232,10 @@ public class GanttPreparedModel implements ToTaskDraw, TimelineStyle, TaskDrawRe
 		return timelineStyle.getCellWidth();
 	}
 
-	// ========================================================================
-	// TaskDrawRegistry delegation
-	// ========================================================================
-
 	@Override
 	public TaskDraw getTaskDraw(Task task) {
-		return drawRegistry.getTaskDraw(task);
+		return getDrawRegistry().getTaskDraw(task);
 	}
-
-	// ========================================================================
-	// ToTaskDraw implementation
-	// ========================================================================
 
 	@Override
 	public PiecewiseConstant getDefaultPlan() {
