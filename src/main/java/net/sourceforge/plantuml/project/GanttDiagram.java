@@ -537,7 +537,7 @@ public class GanttDiagram extends TitledDiagram implements ToTaskDraw, WithSprit
 	}
 
 	public void addVerticalSeparatorBefore(LocalDate day) {
-		model.addVerticalSeparatorBefore(TimePoint.ofStartOfDay(day));
+		model.getSeparators().addSeparatorBefore(TimePoint.ofStartOfDay(day));
 	}
 
 	public void setTaskDefaultCompletion(int defaultCompletion) {

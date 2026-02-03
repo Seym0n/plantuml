@@ -38,17 +38,15 @@ package net.sourceforge.plantuml.project.data;
 import java.util.HashSet;
 import java.util.Set;
 
-import net.sourceforge.plantuml.project.VerticalSeparators;
 import net.sourceforge.plantuml.project.time.TimePoint;
 
 /**
  * Value object containing vertical separator positions.
  */
-public class VerticalSeparatorsData implements VerticalSeparators {
+public class VerticalSeparatorsData {
 
 	private final Set<TimePoint> verticalSeparatorBefore = new HashSet<>();
 
-	@Override
 	public boolean hasSeparatorBefore(TimePoint day) {
 		return verticalSeparatorBefore.contains(day);
 	}

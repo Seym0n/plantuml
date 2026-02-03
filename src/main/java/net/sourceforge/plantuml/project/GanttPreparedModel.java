@@ -92,7 +92,7 @@ import net.sourceforge.plantuml.skin.Pragma;
 import net.sourceforge.plantuml.style.ISkinParam;
 import net.sourceforge.plantuml.style.SName;
 
-public class GanttPreparedModel implements ToTaskDraw, TimelineStyle, VerticalSeparators, TaskDrawRegistry {
+public class GanttPreparedModel implements ToTaskDraw, TimelineStyle, TaskDrawRegistry {
 
 	// ========================================================================
 	// Value objects
@@ -133,6 +133,8 @@ public class GanttPreparedModel implements ToTaskDraw, TimelineStyle, VerticalSe
 		return displayConfig;
 	}
 
+	private final VerticalSeparatorsData separators = new VerticalSeparatorsData();
+
 	public VerticalSeparatorsData getSeparators() {
 		return separators;
 	}
@@ -141,7 +143,6 @@ public class GanttPreparedModel implements ToTaskDraw, TimelineStyle, VerticalSe
 		return drawRegistry;
 	}
 
-	private final VerticalSeparatorsData separators = new VerticalSeparatorsData();
 	private final TaskDrawRegistryData drawRegistry = new TaskDrawRegistryData();
 
 	private final TimelineStyleData timelineStyle;
@@ -225,19 +226,6 @@ public class GanttPreparedModel implements ToTaskDraw, TimelineStyle, VerticalSe
 	@Override
 	public double getCellWidth() {
 		return timelineStyle.getCellWidth();
-	}
-
-	// ========================================================================
-	// VerticalSeparators delegation
-	// ========================================================================
-
-	@Override
-	public boolean hasSeparatorBefore(TimePoint day) {
-		return separators.hasSeparatorBefore(day);
-	}
-
-	public void addVerticalSeparatorBefore(TimePoint day) {
-		separators.addSeparatorBefore(day);
 	}
 
 	// ========================================================================

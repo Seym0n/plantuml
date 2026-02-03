@@ -78,7 +78,7 @@ public abstract class TimeHeader {
 	}
 
 	protected final boolean isBold2(TimePoint wink) {
-		return model.hasSeparatorBefore(wink);
+		return model.getSeparators().hasSeparatorBefore(wink);
 	}
 
 	protected final LocalDate getMinDay() {
