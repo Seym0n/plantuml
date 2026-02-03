@@ -40,21 +40,15 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 
-import net.sourceforge.plantuml.klimt.UStroke;
 import net.sourceforge.plantuml.klimt.color.HColor;
 import net.sourceforge.plantuml.klimt.color.HColorSet;
 import net.sourceforge.plantuml.klimt.drawing.UGraphic;
 import net.sourceforge.plantuml.klimt.font.StringBounder;
 import net.sourceforge.plantuml.klimt.font.UFont;
-import net.sourceforge.plantuml.klimt.geom.HorizontalAlignment;
 import net.sourceforge.plantuml.project.core.PrintScale;
 import net.sourceforge.plantuml.project.core.Resource;
 import net.sourceforge.plantuml.project.core.Task;
@@ -62,6 +56,15 @@ import net.sourceforge.plantuml.project.core.TaskCode;
 import net.sourceforge.plantuml.project.core.TaskGroup;
 import net.sourceforge.plantuml.project.core.TaskImpl;
 import net.sourceforge.plantuml.project.core.TaskSeparator;
+import net.sourceforge.plantuml.project.data.DayCalendarData;
+import net.sourceforge.plantuml.project.data.DisplayConfigData;
+import net.sourceforge.plantuml.project.data.GanttModelData;
+import net.sourceforge.plantuml.project.data.TaskDrawRegistryData;
+import net.sourceforge.plantuml.project.data.TimeBoundsData;
+import net.sourceforge.plantuml.project.data.TimeScaleConfigData;
+import net.sourceforge.plantuml.project.data.TimelineStyleData;
+import net.sourceforge.plantuml.project.data.VerticalSeparatorsData;
+import net.sourceforge.plantuml.project.data.WeekConfigData;
 import net.sourceforge.plantuml.project.draw.FingerPrint;
 import net.sourceforge.plantuml.project.draw.ResourceDraw;
 import net.sourceforge.plantuml.project.draw.ResourceDrawNumbers;
@@ -90,79 +93,34 @@ import net.sourceforge.plantuml.real.RealOrigin;
 import net.sourceforge.plantuml.real.RealUtils;
 import net.sourceforge.plantuml.skin.Pragma;
 import net.sourceforge.plantuml.style.ISkinParam;
-import net.sourceforge.plantuml.style.PName;
 import net.sourceforge.plantuml.style.SName;
-import net.sourceforge.plantuml.style.Style;
 
 public class GanttPreparedModel implements ToTaskDraw, GanttModel, TimeBounds, TimeScaleConfig,
 		WeekConfig, DayCalendar, DisplayConfig, TimelineStyle, VerticalSeparators, TaskDrawRegistry, LocaleProvider {
 
-	// ------------------------------------------------------------------------
-	// core domain data
-	// ------------------------------------------------------------------------
-	private final List<GanttConstraint> constraints = new ArrayList<>();
-	private final Map<TaskCode, Task> tasks = new LinkedHashMap<>();
-	private final Map<String, Resource> resources = new LinkedHashMap<>();
+	// ========================================================================
+	// Value objects
+	// ========================================================================
+	private final GanttModelData modelData = new GanttModelData();
+	private final TimeBoundsData timeBounds = new TimeBoundsData();
+	private final TimeScaleConfigData scaleConfig = new TimeScaleConfigData();
+	private final WeekConfigData weekConfig = new WeekConfigData();
+	private final DayCalendarData dayCalendar = new DayCalendarData();
+	private final DisplayConfigData displayConfig = new DisplayConfigData();
+	private final TimelineStyleData timelineStyle;
+	private final VerticalSeparatorsData separators = new VerticalSeparatorsData();
+	private final TaskDrawRegistryData drawRegistry = new TaskDrawRegistryData();
 
-	// ------------------------------------------------------------------------
-	// layout / origin
-	// ------------------------------------------------------------------------
+	// ========================================================================
+	// Layout / origin (internal, not in value objects)
+	// ========================================================================
 	private final RealOrigin origin = RealUtils.createOrigin();
-
-	// ------------------------------------------------------------------------
-	// inputs / configuration
-	// ------------------------------------------------------------------------
-	private final GanttStyle ganttStyle;
-
-	private Locale locale = Locale.ENGLISH;
-
-	private PrintScale printScale = PrintScale.DAILY;
-	private double factorScale = 1.0;
-
-	private boolean hideClosed;
-	private LocalDate printStart;
-	private LocalDate printEnd;
-
-	private WeeklyHeaderStrategy weeklyHeaderStrategy;
-	private int weekStartingNumber;
-
-	// Let's follow ISO-8601 rules
-	private WeekNumberStrategy weekNumberStrategy = new WeekNumberStrategy(DayOfWeek.MONDAY, 4);
-
-	private LabelStrategy labelStrategy = new LabelStrategy(LabelPosition.LEGACY, HorizontalAlignment.LEFT);
-
-	private boolean showFootbox = true;
-	private boolean hideResourceName;
-	private boolean hideResourceFootbox;
-
-	// ------------------------------------------------------------------------
-	// model bounds / computed scalars
-	// ------------------------------------------------------------------------
-	private LocalDate minDay = TimePoint.epoch();
-	private LocalDate maxDay;
-
 	private double totalHeightWithoutFooter;
 
-	// ------------------------------------------------------------------------
-	// prepared drawing / layout artifacts
-	// ------------------------------------------------------------------------
-	private final Map<Task, TaskDraw> draws = new LinkedHashMap<>();
-	private final Set<TimePoint> verticalSeparatorBefore = new HashSet<>();
-
-	// ------------------------------------------------------------------------
-	// timeline labels and colors (prepared caches)
-	// ------------------------------------------------------------------------
-	private final Map<TimePoint, String> nameDays = new HashMap<>();
-
-	private final Map<TimePoint, HColor> colorDaysToday = new HashMap<>();
-	private final Map<TimePoint, HColor> colorDaysInternal = new HashMap<>();
-	private final Map<DayOfWeek, HColor> colorDaysOfWeek = new HashMap<>();
-
-	// ------------------------------------------------------------------------
-	// internal helpers / shared infrastructure
-	// ------------------------------------------------------------------------
-	private final OpenClose openClose = new OpenClose();
-	private final HColorSet colorSet = HColorSet.instance();
+	// ========================================================================
+	// Infrastructure
+	// ========================================================================
+	private final GanttStyle ganttStyle;
 	private final ISkinParam skinParam;
 
 	// ========================================================================
@@ -172,414 +130,367 @@ public class GanttPreparedModel implements ToTaskDraw, GanttModel, TimeBounds, T
 	public GanttPreparedModel(GanttStyle ganttStyle, ISkinParam skinParam) {
 		this.ganttStyle = ganttStyle;
 		this.skinParam = skinParam;
+		this.timelineStyle = new TimelineStyleData(ganttStyle, HColorSet.instance());
 	}
 
 	// ========================================================================
-	// GanttModel implementation
+	// GanttModel delegation
 	// ========================================================================
 
 	@Override
 	public Collection<Task> getTasks() {
-		return Collections.unmodifiableCollection(tasks.values());
+		return modelData.getTasks();
 	}
 
 	@Override
 	public Collection<Resource> getResources() {
-		return Collections.unmodifiableCollection(resources.values());
+		return modelData.getResources();
 	}
 
 	@Override
 	public Collection<GanttConstraint> getConstraints() {
-		return Collections.unmodifiableCollection(constraints);
+		return modelData.getConstraints();
+	}
+
+	public void addConstraint(GanttConstraint constraint) {
+		modelData.addConstraint(constraint);
+	}
+
+	public void putTask(TaskCode code, Task task) {
+		modelData.putTask(code, task);
+	}
+
+	public Task getTask(TaskCode code) {
+		return modelData.getTask(code);
+	}
+
+	public void putResource(String name, Resource resource) {
+		modelData.putResource(name, resource);
+	}
+
+	public Resource getResource(String name) {
+		return modelData.getResource(name);
 	}
 
 	// ========================================================================
-	// TimeBounds implementation
+	// TimeBounds delegation
 	// ========================================================================
 
 	@Override
 	public LocalDate getMinDay() {
-		return minDay;
+		return timeBounds.getMinDay();
 	}
 
 	@Override
 	public LocalDate getMaxDay() {
-		return maxDay;
+		return timeBounds.getMaxDay();
 	}
 
 	@Override
 	public LocalDate getPrintStart() {
-		return printStart;
+		return timeBounds.getPrintStart();
 	}
 
 	@Override
 	public LocalDate getPrintEnd() {
-		return printEnd;
+		return timeBounds.getPrintEnd();
+	}
+
+	public void setMinDay(LocalDate minDay) {
+		timeBounds.setMinDay(minDay);
+	}
+
+	public void setMaxDay(LocalDate maxDay) {
+		timeBounds.setMaxDay(maxDay);
+	}
+
+	public void setPrintStart(LocalDate printStart) {
+		timeBounds.setPrintStart(printStart);
+	}
+
+	public void setPrintEnd(LocalDate printEnd) {
+		timeBounds.setPrintEnd(printEnd);
 	}
 
 	// ========================================================================
-	// TimeScaleConfig implementation
+	// TimeScaleConfig delegation
 	// ========================================================================
 
 	@Override
 	public PrintScale getPrintScale() {
-		return printScale;
+		return scaleConfig.getPrintScale();
 	}
 
 	@Override
 	public double getFactorScale() {
-		return factorScale;
+		return scaleConfig.getFactorScale();
 	}
 
 	@Override
 	public double getEffectiveScale() {
-		return printScale.getDefaultScale() * factorScale;
+		return scaleConfig.getEffectiveScale();
 	}
 
 	@Override
 	public boolean isHideClosed() {
-		return hideClosed;
+		return scaleConfig.isHideClosed();
+	}
+
+	public void setPrintScale(PrintScale printScale) {
+		scaleConfig.setPrintScale(printScale);
+	}
+
+	public void setFactorScale(double factorScale) {
+		scaleConfig.setFactorScale(factorScale);
+	}
+
+	public void setHideClosed(boolean hideClosed) {
+		scaleConfig.setHideClosed(hideClosed);
 	}
 
 	// ========================================================================
-	// WeekConfig implementation
+	// WeekConfig delegation
 	// ========================================================================
 
 	@Override
 	public WeekNumberStrategy getWeekNumberStrategy() {
-		return weekNumberStrategy;
+		return weekConfig.getWeekNumberStrategy();
 	}
 
 	@Override
 	public WeeklyHeaderStrategy getWeeklyHeaderStrategy() {
-		return weeklyHeaderStrategy;
+		return weekConfig.getWeeklyHeaderStrategy();
 	}
 
 	@Override
 	public int getWeekStartingNumber() {
-		return weekStartingNumber;
+		return weekConfig.getWeekStartingNumber();
+	}
+
+	public void setWeekNumberStrategy(WeekNumberStrategy weekNumberStrategy) {
+		weekConfig.setWeekNumberStrategy(weekNumberStrategy);
+	}
+
+	public void setWeeklyHeaderStrategy(WeeklyHeaderStrategy weeklyHeaderStrategy) {
+		weekConfig.setWeeklyHeaderStrategy(weeklyHeaderStrategy);
+	}
+
+	public void setWeekStartingNumber(int weekStartingNumber) {
+		weekConfig.setWeekStartingNumber(weekStartingNumber);
 	}
 
 	// ========================================================================
-	// DayCalendar implementation
-	// ========================================================================
-
-	@Override
-	public boolean isOpen(LocalDate day) {
-		return openClose.getLoadAtDUMMY(day) > 0;
-	}
-
-	@Override
-	public boolean isOpen(TimePoint instant) {
-		return openClose.getLoadAtDUMMY(instant.toDay()) > 0;
-	}
-
-	@Override
-	public HColor getDayColor(TimePoint day) {
-		HColor color = colorDaysToday.get(day);
-		if (color == null)
-			color = colorDaysInternal.get(day);
-		return color;
-	}
-
-	@Override
-	public HColor getDayOfWeekColor(DayOfWeek dayOfWeek) {
-		return colorDaysOfWeek.get(dayOfWeek);
-	}
-
-	@Override
-	public String getDayName(TimePoint day) {
-		return nameDays.get(day);
-	}
-
-	@Override
-	public OpenClose getOpenClose() {
-		return openClose;
-	}
-
-	// ========================================================================
-	// DisplayConfig implementation
-	// ========================================================================
-
-	@Override
-	public LabelStrategy getLabelStrategy() {
-		return labelStrategy;
-	}
-
-	@Override
-	public boolean isShowFootbox() {
-		return showFootbox;
-	}
-
-	@Override
-	public boolean isHideResourceName() {
-		return hideResourceName;
-	}
-
-	@Override
-	public boolean isHideResourceFootbox() {
-		return hideResourceFootbox;
-	}
-
-	// ========================================================================
-	// TimelineStyle implementation
-	// ========================================================================
-
-	@Override
-	public double getFontSizeDay() {
-		return getStyleDay().value(PName.FontSize).asDouble();
-	}
-
-	@Override
-	public double getFontSizeMonth() {
-		return ganttStyle.getStyle(SName.timeline, SName.month).value(PName.FontSize).asDouble();
-	}
-
-	@Override
-	public double getFontSizeYear() {
-		return ganttStyle.getStyle(SName.timeline, SName.year).value(PName.FontSize).asDouble();
-	}
-
-	@Override
-	public UFont getFont(SName param) {
-		return ganttStyle.getStyle(SName.timeline, param).getUFont();
-	}
-
-	@Override
-	public HColor getClosedBackgroundColor() {
-		return ganttStyle.getStyle(SName.closed).value(PName.BackGroundColor).asColor(colorSet);
-	}
-
-	@Override
-	public HColor getClosedFontColor() {
-		return ganttStyle.getStyle(SName.closed).value(PName.FontColor).asColor(colorSet);
-	}
-
-	@Override
-	public HColor getOpenFontColor() {
-		return ganttStyle.getStyle(SName.timeline).value(PName.FontColor).asColor(colorSet);
-	}
-
-	@Override
-	public HColor getLineColor() {
-		return ganttStyle.getStyle(SName.timeline).value(PName.LineColor).asColor(colorSet);
-	}
-
-	@Override
-	public HColorSet getColorSet() {
-		return colorSet;
-	}
-
-	@Override
-	public UGraphic applyVerticalSeparatorStyle(UGraphic ug) {
-		final Style style = ganttStyle.getStyle(SName.verticalSeparator);
-		final HColor color = style.value(PName.LineColor).asColor(colorSet);
-		final UStroke stroke = style.getStroke();
-		return ug.apply(color).apply(stroke);
-	}
-
-	@Override
-	public double getCellWidth() {
-		final double w = getStyleDay().value(PName.FontSize).asDouble();
-		return w * 1.6;
-	}
-
-	// ========================================================================
-	// VerticalSeparators implementation
-	// ========================================================================
-
-	@Override
-	public boolean hasSeparatorBefore(TimePoint day) {
-		return verticalSeparatorBefore.contains(day);
-	}
-
-	// ========================================================================
-	// TaskDrawRegistry implementation
-	// ========================================================================
-
-	@Override
-	public TaskDraw getTaskDraw(Task task) {
-		return draws.get(task);
-	}
-
-	// ========================================================================
-	// LocaleProvider implementation
+	// LocaleProvider delegation
 	// ========================================================================
 
 	@Override
 	public Locale getLocale() {
-		return locale;
+		return weekConfig.getLocale();
+	}
+
+	public void setLocale(Locale locale) {
+		weekConfig.setLocale(locale);
 	}
 
 	// ========================================================================
-	// ToTaskDraw implementation (existing interface)
+	// DayCalendar delegation
+	// ========================================================================
+
+	@Override
+	public boolean isOpen(LocalDate day) {
+		return dayCalendar.isOpen(day);
+	}
+
+	@Override
+	public boolean isOpen(TimePoint instant) {
+		return dayCalendar.isOpen(instant);
+	}
+
+	@Override
+	public HColor getDayColor(TimePoint day) {
+		return dayCalendar.getDayColor(day);
+	}
+
+	@Override
+	public HColor getDayOfWeekColor(DayOfWeek dayOfWeek) {
+		return dayCalendar.getDayOfWeekColor(dayOfWeek);
+	}
+
+	@Override
+	public String getDayName(TimePoint day) {
+		return dayCalendar.getDayName(day);
+	}
+
+	@Override
+	public OpenClose getOpenClose() {
+		return dayCalendar.getOpenClose();
+	}
+
+	public Map<TimePoint, HColor> getColorDays() {
+		return dayCalendar.getColorDays();
+	}
+
+	public Map<TimePoint, String> getNameDays() {
+		return dayCalendar.getNameDays();
+	}
+
+	public void putNameDay(TimePoint day, String name) {
+		dayCalendar.putNameDay(day, name);
+	}
+
+	public void putColorDayToday(TimePoint day, HColor color) {
+		dayCalendar.putColorDayToday(day, color);
+	}
+
+	public void putColorDayInternal(TimePoint day, HColor color) {
+		dayCalendar.putColorDayInternal(day, color);
+	}
+
+	public void putColorDayOfWeek(DayOfWeek dow, HColor color) {
+		dayCalendar.putColorDayOfWeek(dow, color);
+	}
+
+	// ========================================================================
+	// DisplayConfig delegation
+	// ========================================================================
+
+	@Override
+	public LabelStrategy getLabelStrategy() {
+		return displayConfig.getLabelStrategy();
+	}
+
+	@Override
+	public boolean isShowFootbox() {
+		return displayConfig.isShowFootbox();
+	}
+
+	@Override
+	public boolean isHideResourceName() {
+		return displayConfig.isHideResourceName();
+	}
+
+	@Override
+	public boolean isHideResourceFootbox() {
+		return displayConfig.isHideResourceFootbox();
+	}
+
+	public void setLabelStrategy(LabelStrategy labelStrategy) {
+		displayConfig.setLabelStrategy(labelStrategy);
+	}
+
+	public void setShowFootbox(boolean showFootbox) {
+		displayConfig.setShowFootbox(showFootbox);
+	}
+
+	public void setHideResourceName(boolean hideResourceName) {
+		displayConfig.setHideResourceName(hideResourceName);
+	}
+
+	public void setHideResourceFootbox(boolean hideResourceFootbox) {
+		displayConfig.setHideResourceFootbox(hideResourceFootbox);
+	}
+
+	// ========================================================================
+	// TimelineStyle delegation
+	// ========================================================================
+
+	@Override
+	public double getFontSizeDay() {
+		return timelineStyle.getFontSizeDay();
+	}
+
+	@Override
+	public double getFontSizeMonth() {
+		return timelineStyle.getFontSizeMonth();
+	}
+
+	@Override
+	public double getFontSizeYear() {
+		return timelineStyle.getFontSizeYear();
+	}
+
+	@Override
+	public UFont getFont(SName param) {
+		return timelineStyle.getFont(param);
+	}
+
+	@Override
+	public HColor getClosedBackgroundColor() {
+		return timelineStyle.getClosedBackgroundColor();
+	}
+
+	@Override
+	public HColor getClosedFontColor() {
+		return timelineStyle.getClosedFontColor();
+	}
+
+	@Override
+	public HColor getOpenFontColor() {
+		return timelineStyle.getOpenFontColor();
+	}
+
+	@Override
+	public HColor getLineColor() {
+		return timelineStyle.getLineColor();
+	}
+
+	@Override
+	public HColorSet getColorSet() {
+		return timelineStyle.getColorSet();
+	}
+
+	@Override
+	public UGraphic applyVerticalSeparatorStyle(UGraphic ug) {
+		return timelineStyle.applyVerticalSeparatorStyle(ug);
+	}
+
+	@Override
+	public double getCellWidth() {
+		return timelineStyle.getCellWidth();
+	}
+
+	// ========================================================================
+	// VerticalSeparators delegation
+	// ========================================================================
+
+	@Override
+	public boolean hasSeparatorBefore(TimePoint day) {
+		return separators.hasSeparatorBefore(day);
+	}
+
+	public void addVerticalSeparatorBefore(TimePoint day) {
+		separators.addSeparatorBefore(day);
+	}
+
+	// ========================================================================
+	// TaskDrawRegistry delegation
+	// ========================================================================
+
+	@Override
+	public TaskDraw getTaskDraw(Task task) {
+		return drawRegistry.getTaskDraw(task);
+	}
+
+	// ========================================================================
+	// ToTaskDraw implementation
 	// ========================================================================
 
 	@Override
 	public PiecewiseConstant getDefaultPlan() {
-		return openClose.asPiecewiseConstant();
+		return dayCalendar.getOpenClose().asPiecewiseConstant();
 	}
 
 	@Override
 	public HColorSet getIHtmlColorSet() {
-		return colorSet;
+		return timelineStyle.getColorSet();
 	}
 
 	// ========================================================================
-	// Setters for configuration (used during parsing)
+	// Internal accessors
 	// ========================================================================
-
-	public void setLocale(Locale locale) {
-		this.locale = locale;
-	}
-
-	public void setPrintScale(PrintScale printScale) {
-		this.printScale = printScale;
-	}
-
-	public void setFactorScale(double factorScale) {
-		this.factorScale = factorScale;
-	}
-
-	public void setHideClosed(boolean hideClosed) {
-		this.hideClosed = hideClosed;
-	}
-
-	public void setPrintStart(LocalDate printStart) {
-		this.printStart = printStart;
-	}
-
-	public void setPrintEnd(LocalDate printEnd) {
-		this.printEnd = printEnd;
-	}
-
-	public void setWeeklyHeaderStrategy(WeeklyHeaderStrategy weeklyHeaderStrategy) {
-		this.weeklyHeaderStrategy = weeklyHeaderStrategy;
-	}
-
-	public void setWeekStartingNumber(int weekStartingNumber) {
-		this.weekStartingNumber = weekStartingNumber;
-	}
-
-	public void setWeekNumberStrategy(WeekNumberStrategy weekNumberStrategy) {
-		this.weekNumberStrategy = weekNumberStrategy;
-	}
-
-	public void setLabelStrategy(LabelStrategy labelStrategy) {
-		this.labelStrategy = labelStrategy;
-	}
-
-	public void setShowFootbox(boolean showFootbox) {
-		this.showFootbox = showFootbox;
-	}
-
-	public void setHideResourceName(boolean hideResourceName) {
-		this.hideResourceName = hideResourceName;
-	}
-
-	public void setHideResourceFootbox(boolean hideResourceFootbox) {
-		this.hideResourceFootbox = hideResourceFootbox;
-	}
-
-	public void setMinDay(LocalDate minDay) {
-		this.minDay = minDay;
-	}
-
-	public void setMaxDay(LocalDate maxDay) {
-		this.maxDay = maxDay;
-	}
-
-	// ========================================================================
-	// Mutators for collections (used during parsing)
-	// ========================================================================
-
-	public void addConstraint(GanttConstraint constraint) {
-		constraints.add(constraint);
-	}
-
-	public void putTask(TaskCode code, Task task) {
-		tasks.put(code, task);
-	}
-
-	public Task getTask(TaskCode code) {
-		return tasks.get(code);
-	}
-
-	public void putResource(String name, Resource resource) {
-		resources.put(name, resource);
-	}
-
-	public Resource getResource(String name) {
-		return resources.get(name);
-	}
-
-	public void addVerticalSeparatorBefore(TimePoint day) {
-		verticalSeparatorBefore.add(day);
-	}
-
-	public void putNameDay(TimePoint day, String name) {
-		nameDays.put(day, name);
-	}
-
-	public void putColorDayToday(TimePoint day, HColor color) {
-		colorDaysToday.put(day, color);
-	}
-
-	public void putColorDayInternal(TimePoint day, HColor color) {
-		colorDaysInternal.put(day, color);
-	}
-
-	public void putColorDayOfWeek(DayOfWeek dow, HColor color) {
-		colorDaysOfWeek.put(dow, color);
-	}
-
-	// ========================================================================
-	// Internal accessors (for subclasses and package)
-	// ========================================================================
-
-	protected Map<TaskCode, Task> getTasksMap() {
-		return tasks;
-	}
-
-	protected Map<String, Resource> getResourcesMap() {
-		return resources;
-	}
-
-	protected Map<Task, TaskDraw> getDrawsMap() {
-		return draws;
-	}
-
-	protected RealOrigin getOrigin() {
-		return origin;
-	}
 
 	protected double getTotalHeightWithoutFooter() {
 		return totalHeightWithoutFooter;
-	}
-
-	protected void setTotalHeightWithoutFooter(double totalHeightWithoutFooter) {
-		this.totalHeightWithoutFooter = totalHeightWithoutFooter;
-	}
-
-	public Map<TimePoint, String> getNameDays() {
-		return Collections.unmodifiableMap(nameDays);
-	}
-
-	/**
-	 * Returns a merged view of all day colors (today colors override internal colors).
-	 */
-	public Map<TimePoint, HColor> getColorDays() {
-		final Map<TimePoint, HColor> result = new HashMap<>(colorDaysInternal);
-		result.putAll(colorDaysToday);
-		return Collections.unmodifiableMap(result);
-	}
-
-	// ========================================================================
-	// Style helpers
-	// ========================================================================
-
-	private Style getStyleDay() {
-		return ganttStyle.getStyle(SName.timeline, SName.day);
 	}
 
 	public ISkinParam getSkinParam() {
@@ -595,35 +506,35 @@ public class GanttPreparedModel implements ToTaskDraw, GanttModel, TimeBounds, T
 	// ========================================================================
 
 	public TimeScale simple() {
-		return new TimeScaleWink(getCellWidth(), getEffectiveScale(), printScale);
+		return new TimeScaleWink(getCellWidth(), getEffectiveScale(), getPrintScale());
 	}
 
 	public TimeScale daily() {
-		return hideClosed
-				? new TimeScaleDailyHideClosed(getCellWidth(), TimePoint.ofStartOfDay(minDay),
-						getEffectiveScale(), openClose)
-				: new TimeScaleDaily(getCellWidth(), TimePoint.ofStartOfDay(minDay), getEffectiveScale(),
-						printStart);
+		return isHideClosed()
+				? new TimeScaleDailyHideClosed(getCellWidth(), TimePoint.ofStartOfDay(getMinDay()),
+						getEffectiveScale(), getOpenClose())
+				: new TimeScaleDaily(getCellWidth(), TimePoint.ofStartOfDay(getMinDay()), getEffectiveScale(),
+						getPrintStart());
 	}
 
 	public TimeScale weekly() {
-		return new TimeScaleCompressed(getCellWidth(), TimePoint.ofStartOfDay(minDay), getEffectiveScale(),
-				printStart);
+		return new TimeScaleCompressed(getCellWidth(), TimePoint.ofStartOfDay(getMinDay()), getEffectiveScale(),
+				getPrintStart());
 	}
 
 	public TimeScale monthly() {
-		return new TimeScaleCompressed(getCellWidth(), TimePoint.ofStartOfDay(minDay), getEffectiveScale(),
-				printStart);
+		return new TimeScaleCompressed(getCellWidth(), TimePoint.ofStartOfDay(getMinDay()), getEffectiveScale(),
+				getPrintStart());
 	}
 
 	public TimeScale quaterly() {
-		return new TimeScaleCompressed(getCellWidth(), TimePoint.ofStartOfDay(minDay), getEffectiveScale(),
-				printStart);
+		return new TimeScaleCompressed(getCellWidth(), TimePoint.ofStartOfDay(getMinDay()), getEffectiveScale(),
+				getPrintStart());
 	}
 
 	public TimeScale yearly() {
-		return new TimeScaleCompressed(getCellWidth(), TimePoint.ofStartOfDay(minDay), getEffectiveScale(),
-				printStart);
+		return new TimeScaleCompressed(getCellWidth(), TimePoint.ofStartOfDay(getMinDay()), getEffectiveScale(),
+				getPrintStart());
 	}
 
 	// ========================================================================
@@ -631,15 +542,16 @@ public class GanttPreparedModel implements ToTaskDraw, GanttModel, TimeBounds, T
 	// ========================================================================
 
 	public TimeHeader buildTimeHeader() {
-		if (printScale == PrintScale.DAILY)
+		final PrintScale scale = getPrintScale();
+		if (scale == PrintScale.DAILY)
 			return new TimeHeaderDaily(this);
-		else if (printScale == PrintScale.WEEKLY)
+		else if (scale == PrintScale.WEEKLY)
 			return new TimeHeaderWeekly(this);
-		else if (printScale == PrintScale.MONTHLY)
+		else if (scale == PrintScale.MONTHLY)
 			return new TimeHeaderMonthly(this);
-		else if (printScale == PrintScale.QUARTERLY)
+		else if (scale == PrintScale.QUARTERLY)
 			return new TimeHeaderQuarterly(this);
-		else if (printScale == PrintScale.YEARLY)
+		else if (scale == PrintScale.YEARLY)
 			return new TimeHeaderYearly(this);
 		else
 			throw new IllegalStateException();
@@ -651,27 +563,27 @@ public class GanttPreparedModel implements ToTaskDraw, GanttModel, TimeBounds, T
 
 	protected TimePoint getStartForDrawing(final Task tmp) {
 		TimePoint result;
-		if (printStart == null)
+		if (getPrintStart() == null)
 			result = tmp.getStart();
 		else
-			result = TimePoint.max(TimePoint.ofStartOfDay(minDay), tmp.getStart());
+			result = TimePoint.max(TimePoint.ofStartOfDay(getMinDay()), tmp.getStart());
 
 		return result;
 	}
 
 	protected TimePoint getEndForDrawing(final Task tmp) {
 		TimePoint result;
-		if (printStart == null)
+		if (getPrintStart() == null)
 			result = tmp.getEnd();
 		else
-			result = TimePoint.min(TimePoint.ofStartOfDay(maxDay.plusDays(1)), tmp.getEnd());
+			result = TimePoint.min(TimePoint.ofStartOfDay(getMaxDay().plusDays(1)), tmp.getEnd());
 
 		return result;
 	}
 
 	public void magicPush(StringBounder stringBounder) {
 		final List<TaskDraw> notes = new ArrayList<>();
-		for (TaskDraw td : draws.values()) {
+		for (TaskDraw td : drawRegistry.getDrawsMap().values()) {
 			final FingerPrint taskPrint = td.getFingerPrint(stringBounder);
 			final FingerPrint fingerPrintNote = td.getFingerPrintNote(stringBounder);
 
@@ -695,7 +607,7 @@ public class GanttPreparedModel implements ToTaskDraw, GanttModel, TimeBounds, T
 
 	public double lastY(StringBounder stringBounder) {
 		double result = 0;
-		for (TaskDraw td : draws.values())
+		for (TaskDraw td : drawRegistry.getDrawsMap().values())
 			result = Math.max(result, td.getY(stringBounder).getCurrentValue() + td.getHeightMax(stringBounder));
 
 		return result;
@@ -706,9 +618,9 @@ public class GanttPreparedModel implements ToTaskDraw, GanttModel, TimeBounds, T
 		final boolean oddStart;
 		final TimePoint startForDrawing = getStartForDrawing(task);
 		final TimePoint endForDrawing = getEndForDrawing(task);
-		if (printStart != null) {
-			oddStart = TimePoint.ofStartOfDay(minDay).compareTo(startForDrawing) == 0;
-			oddEnd = TimePoint.ofStartOfDay(maxDay.plusDays(1)).compareTo(endForDrawing) == 0;
+		if (getPrintStart() != null) {
+			oddStart = TimePoint.ofStartOfDay(getMinDay()).compareTo(startForDrawing) == 0;
+			oddEnd = TimePoint.ofStartOfDay(getMaxDay().plusDays(1)).compareTo(endForDrawing) == 0;
 		} else {
 			oddStart = false;
 			oddEnd = false;
@@ -719,7 +631,7 @@ public class GanttPreparedModel implements ToTaskDraw, GanttModel, TimeBounds, T
 
 	private Collection<GanttConstraint> getConstraintsForTask(Task task) {
 		final List<GanttConstraint> result = new ArrayList<>();
-		for (GanttConstraint constraint : constraints)
+		for (GanttConstraint constraint : getConstraints())
 			if (constraint.isOn(task))
 				result.add(constraint);
 
@@ -728,7 +640,7 @@ public class GanttPreparedModel implements ToTaskDraw, GanttModel, TimeBounds, T
 
 	public int getLoadForResource(Resource res, TimePoint i) {
 		int result = 0;
-		for (Task task : tasks.values()) {
+		for (Task task : getTasks()) {
 			if (task instanceof TaskSeparator)
 				continue;
 
@@ -739,19 +651,19 @@ public class GanttPreparedModel implements ToTaskDraw, GanttModel, TimeBounds, T
 	}
 
 	protected ResourceDraw buildResourceDraw(Resource res, TimeScale timeScale, double y) {
-		return new ResourceDrawNumbers(this, res, timeScale, y, TimePoint.ofStartOfDay(minDay),
-				TimePoint.ofEndOfDayMinusOneSecond(maxDay));
+		return new ResourceDrawNumbers(this, res, timeScale, y, TimePoint.ofStartOfDay(getMinDay()),
+				TimePoint.ofEndOfDayMinusOneSecond(getMaxDay()));
 	}
 
 	public void initTaskAndResourceDraws(StringBounder stringBounder, TimeHeader timeHeader) {
 		final TimeScale timeScale = timeHeader.getTimeScale();
 		final double fullHeaderHeight = timeHeader.getFullHeaderHeight(stringBounder);
 		Real y = origin.addFixed(fullHeaderHeight);
-		for (Task task : tasks.values()) {
+		for (Task task : getTasks()) {
 			final TaskDraw draw;
 			if (task instanceof TaskSeparator) {
 				final TaskSeparator taskSeparator = (TaskSeparator) task;
-				draw = new TaskDrawSeparator(taskSeparator.getName(), timeScale, y, minDay, maxDay,
+				draw = new TaskDrawSeparator(taskSeparator.getName(), timeScale, y, getMinDay(), getMaxDay(),
 						task.getStyleBuilder(), getSkinParam());
 			} else if (task instanceof TaskGroup) {
 				final TaskGroup taskGroup = (TaskGroup) task;
@@ -759,7 +671,7 @@ public class GanttPreparedModel implements ToTaskDraw, GanttModel, TimeBounds, T
 						getEndForDrawing(taskGroup), task, this, task.getStyleBuilder(), getSkinParam());
 			} else {
 				final TaskImpl taskImpl = (TaskImpl) task;
-				final String display = hideResourceName ? taskImpl.getCode().getDisplay() : taskImpl.getPrettyDisplay();
+				final String display = isHideResourceName() ? taskImpl.getCode().getDisplay() : taskImpl.getPrettyDisplay();
 				if (taskImpl.isDiamond())
 					draw = new TaskDrawDiamond(timeScale, y, display, getStartForDrawing(taskImpl), taskImpl, this,
 							task.getStyleBuilder(), getSkinParam());
@@ -772,15 +684,15 @@ public class GanttPreparedModel implements ToTaskDraw, GanttModel, TimeBounds, T
 			if (task.getRow() == null)
 				y = y.addAtLeast(draw.getFullHeightTask(stringBounder));
 
-			draws.put(task, draw);
+			drawRegistry.putTaskDraw(task, draw);
 		}
 		origin.compileNow();
 		magicPush(stringBounder);
 		double yy = lastY(stringBounder);
 		if (yy == 0) {
 			yy = fullHeaderHeight;
-		} else if (hideResourceFootbox == false)
-			for (Resource res : resources.values()) {
+		} else if (isHideResourceFootbox() == false)
+			for (Resource res : getResources()) {
 				final ResourceDraw draw = buildResourceDraw(res, timeScale, yy);
 				res.setTaskDraw(draw);
 				yy += draw.getHeight(stringBounder);
@@ -789,14 +701,14 @@ public class GanttPreparedModel implements ToTaskDraw, GanttModel, TimeBounds, T
 		totalHeightWithoutFooter = yy;
 	}
 
-	protected boolean isHidden(Task task) {
-		if (printStart == null || task instanceof TaskSeparator)
+	public boolean isHidden(Task task) {
+		if (getPrintStart() == null || task instanceof TaskSeparator)
 			return false;
 
-		if (task.getEndMinusOneDayTOBEREMOVED().compareTo(TimePoint.ofStartOfDay(minDay)) < 0)
+		if (task.getEndMinusOneDayTOBEREMOVED().compareTo(TimePoint.ofStartOfDay(getMinDay())) < 0)
 			return true;
 
-		if (task.getStart().compareTo(TimePoint.ofEndOfDayMinusOneSecond(maxDay)) > 0)
+		if (task.getStart().compareTo(TimePoint.ofEndOfDayMinusOneSecond(getMaxDay())) > 0)
 			return true;
 
 		return false;
