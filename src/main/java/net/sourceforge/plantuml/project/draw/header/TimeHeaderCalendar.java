@@ -52,7 +52,7 @@ public abstract class TimeHeaderCalendar extends TimeHeader {
 	}
 
 	protected final Locale locale() {
-		return model.getLocale();
+		return model.getWeekConfig().getLocale();
 	}
 
 	protected final int getLoadAt(TimePoint instant) {

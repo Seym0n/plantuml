@@ -38,14 +38,13 @@ package net.sourceforge.plantuml.project.data;
 import java.time.DayOfWeek;
 import java.util.Locale;
 
-import net.sourceforge.plantuml.project.LocaleProvider;
 import net.sourceforge.plantuml.project.draw.WeeklyHeaderStrategy;
 import net.sourceforge.plantuml.project.time.WeekNumberStrategy;
 
 /**
  * Value object containing week-related configuration and locale.
  */
-public class WeekConfigData implements LocaleProvider {
+public class WeekConfigData {
 
 	private Locale locale = Locale.ENGLISH;
 

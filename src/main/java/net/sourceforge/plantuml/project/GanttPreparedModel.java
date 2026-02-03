@@ -52,7 +52,6 @@ import net.sourceforge.plantuml.klimt.font.UFont;
 import net.sourceforge.plantuml.project.core.PrintScale;
 import net.sourceforge.plantuml.project.core.Resource;
 import net.sourceforge.plantuml.project.core.Task;
-import net.sourceforge.plantuml.project.core.TaskCode;
 import net.sourceforge.plantuml.project.core.TaskGroup;
 import net.sourceforge.plantuml.project.core.TaskImpl;
 import net.sourceforge.plantuml.project.core.TaskSeparator;
@@ -73,7 +72,6 @@ import net.sourceforge.plantuml.project.draw.TaskDrawDiamond;
 import net.sourceforge.plantuml.project.draw.TaskDrawGroup;
 import net.sourceforge.plantuml.project.draw.TaskDrawRegular;
 import net.sourceforge.plantuml.project.draw.TaskDrawSeparator;
-import net.sourceforge.plantuml.project.draw.WeeklyHeaderStrategy;
 import net.sourceforge.plantuml.project.draw.header.TimeHeader;
 import net.sourceforge.plantuml.project.draw.header.TimeHeaderDaily;
 import net.sourceforge.plantuml.project.draw.header.TimeHeaderMonthly;
@@ -82,7 +80,6 @@ import net.sourceforge.plantuml.project.draw.header.TimeHeaderWeekly;
 import net.sourceforge.plantuml.project.draw.header.TimeHeaderYearly;
 import net.sourceforge.plantuml.project.ngm.math.PiecewiseConstant;
 import net.sourceforge.plantuml.project.time.TimePoint;
-import net.sourceforge.plantuml.project.time.WeekNumberStrategy;
 import net.sourceforge.plantuml.project.timescale.TimeScale;
 import net.sourceforge.plantuml.project.timescale.TimeScaleCompressed;
 import net.sourceforge.plantuml.project.timescale.TimeScaleDaily;
@@ -95,8 +92,8 @@ import net.sourceforge.plantuml.skin.Pragma;
 import net.sourceforge.plantuml.style.ISkinParam;
 import net.sourceforge.plantuml.style.SName;
 
-public class GanttPreparedModel implements ToTaskDraw, DayCalendar, DisplayConfig, TimelineStyle,
-		VerticalSeparators, TaskDrawRegistry, LocaleProvider {
+public class GanttPreparedModel
+		implements ToTaskDraw, DayCalendar, DisplayConfig, TimelineStyle, VerticalSeparators, TaskDrawRegistry {
 
 	// ========================================================================
 	// Value objects
@@ -125,15 +122,16 @@ public class GanttPreparedModel implements ToTaskDraw, DayCalendar, DisplayConfi
 		return weekConfig;
 	}
 
-	public DayCalendarData getDayCalendar() {
-		return dayCalendar;
-	}
-
 	public DisplayConfigData getDisplayConfig() {
 		return displayConfig;
 	}
 
 	private final DayCalendarData dayCalendar = new DayCalendarData();
+
+	public DayCalendarData getDayCalendar() {
+		return dayCalendar;
+	}
+
 	private final DisplayConfigData displayConfig = new DisplayConfigData();
 	private final TimelineStyleData timelineStyle;
 	private final VerticalSeparatorsData separators = new VerticalSeparatorsData();
@@ -160,20 +158,6 @@ public class GanttPreparedModel implements ToTaskDraw, DayCalendar, DisplayConfi
 		this.skinParam = skinParam;
 		this.timelineStyle = new TimelineStyleData(ganttStyle, HColorSet.instance());
 	}
-
-
-	@Override
-	public Locale getLocale() {
-		return weekConfig.getLocale();
-	}
-
-	public void setLocale(Locale locale) {
-		weekConfig.setLocale(locale);
-	}
-
-	// ========================================================================
-	// DayCalendar delegation
-	// ========================================================================
 
 	@Override
 	public boolean isOpen(LocalDate day) {

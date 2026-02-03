@@ -124,7 +124,7 @@ public class GanttDiagram extends TitledDiagram implements ToTaskDraw, WithSprit
 	private static final Pattern RESOURCE_ASSIGNMENT_PATTERN = Pattern.compile("([^:]+)(:(\\d+))?");
 
 	public CommandExecutionResult changeLanguage(String lang) {
-		model.setLocale(new Locale(lang));
+		model.getWeekConfig().setLocale(new Locale(lang));
 		return CommandExecutionResult.ok();
 	}
 
