@@ -54,12 +54,12 @@ public class TimeHeaderMonthly extends TimeHeaderCalendar {
 	}
 
 	private double getH1(StringBounder stringBounder) {
-		final double h = model.getFontSizeYear() + 2;
+		final double h = model.getTimelineStyle().getFontSizeYear() + 2;
 		return h;
 	}
 
 	private double getH2(StringBounder stringBounder) {
-		final double h = model.getFontSizeMonth() + 2;
+		final double h = model.getTimelineStyle().getFontSizeMonth() + 2;
 		return getH1(stringBounder) + h;
 	}
 
@@ -70,8 +70,8 @@ public class TimeHeaderMonthly extends TimeHeaderCalendar {
 
 	@Override
 	public double getTimeFooterHeight(StringBounder stringBounder) {
-		final double h1 = model.getFontSizeYear();
-		final double h2 = model.getFontSizeMonth();
+		final double h1 = model.getTimelineStyle().getFontSizeYear();
+		final double h2 = model.getTimelineStyle().getFontSizeMonth();
 		return h1 + h2 + 5;
 	}
 
@@ -99,8 +99,8 @@ public class TimeHeaderMonthly extends TimeHeaderCalendar {
 
 	@Override
 	public void drawTimeFooter(UGraphic ug) {
-		final double h1 = model.getFontSizeYear();
-		final double h2 = model.getFontSizeMonth();
+		final double h1 = model.getTimelineStyle().getFontSizeYear();
+		final double h2 = model.getTimelineStyle().getFontSizeMonth();
 		// ug = ug.apply(UTranslate.dy(3));
 		drawMonths(ug);
 		drawYears(ug.apply(UTranslate.dy(h2 + 2)));
@@ -111,7 +111,7 @@ public class TimeHeaderMonthly extends TimeHeaderCalendar {
 	}
 
 	private void drawYears(final UGraphic ug) {
-		final double h1 = model.getFontSizeYear();
+		final double h1 = model.getTimelineStyle().getFontSizeYear();
 		YearMonth last = null;
 		double lastChange = -1;
 		for (LocalDate day = getMinDay(); day.compareTo(getMaxDay()) < 0; day = day.plusDays(1)) {
@@ -135,7 +135,7 @@ public class TimeHeaderMonthly extends TimeHeaderCalendar {
 	}
 
 	private void drawMonths(UGraphic ug) {
-		final double h2 = model.getFontSizeMonth();
+		final double h2 = model.getTimelineStyle().getFontSizeMonth();
 		YearMonth last = null;
 		double lastChange = -1;
 		for (LocalDate day = getMinDay(); day.compareTo(getMaxDay()) < 0; day = day.plusDays(1)) {
@@ -177,7 +177,7 @@ public class TimeHeaderMonthly extends TimeHeaderCalendar {
 
 	private double getHeaderNameDayHeight() {
 		if (model.getDayCalendar().getNameDays().size() > 0) {
-			final double h = model.getFontSizeDay() + 6;
+			final double h = model.getTimelineStyle().getFontSizeDay() + 6;
 			return h;
 		}
 

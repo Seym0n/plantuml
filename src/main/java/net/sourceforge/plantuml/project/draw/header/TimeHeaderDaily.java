@@ -56,17 +56,17 @@ public class TimeHeaderDaily extends TimeHeaderCalendar {
 	}
 
 	private double getH1(StringBounder stringBounder) {
-		final double h = model.getFontSizeMonth() + 2;
+		final double h = model.getTimelineStyle().getFontSizeMonth() + 2;
 		return h;
 	}
 
 	private double getH2(StringBounder stringBounder) {
-		final double h = model.getFontSizeDay() + 2;
+		final double h = model.getTimelineStyle().getFontSizeDay() + 2;
 		return getH1(stringBounder) + h;
 	}
 
 	private double getH3(StringBounder stringBounder) {
-		final double h = model.getFontSizeDay() + 3;
+		final double h = model.getTimelineStyle().getFontSizeDay() + 3;
 		return getH2(stringBounder) + h;
 	}
 
@@ -77,15 +77,15 @@ public class TimeHeaderDaily extends TimeHeaderCalendar {
 
 	@Override
 	public double getTimeFooterHeight(StringBounder stringBounder) {
-		final double h1 = model.getFontSizeDay();
-		final double h2 = model.getFontSizeDay();
-		final double h3 = model.getFontSizeMonth();
+		final double h1 = model.getTimelineStyle().getFontSizeDay();
+		final double h2 = model.getTimelineStyle().getFontSizeDay();
+		final double h3 = model.getTimelineStyle().getFontSizeMonth();
 		return h1 + h2 + h3 + 8;
 	}
 
 	private double getHeaderNameDayHeight() {
 		if (model.getDayCalendar().getNameDays().size() > 0) {
-			final double h = model.getFontSizeDay() + 6;
+			final double h = model.getTimelineStyle().getFontSizeDay() + 6;
 			return h;
 		}
 
@@ -113,7 +113,7 @@ public class TimeHeaderDaily extends TimeHeaderCalendar {
 
 	@Override
 	protected void printVerticalSeparators(final UGraphic ug, double totalHeightWithoutFooter) {
-		final UGraphic ugVerticalSeparator = model.applyVerticalSeparatorStyle(ug);
+		final UGraphic ugVerticalSeparator = model.getTimelineStyle().applyVerticalSeparatorStyle(ug);
 		final UGraphic ugLineColor = ug.apply(getLineColor());
 		for (LocalDate day = getMinDay(); day.compareTo(getMaxDay()) <= 0; day = day.plusDays(1)) {
 			final TimePoint wink = TimePoint.ofStartOfDay(day);
@@ -132,7 +132,7 @@ public class TimeHeaderDaily extends TimeHeaderCalendar {
 
 	@Override
 	public void drawTimeFooter(UGraphic ug) {
-		final double h = model.getFontSizeDay() + 2;
+		final double h = model.getTimelineStyle().getFontSizeDay() + 2;
 		drawTextsDayOfWeek(ug);
 		drawTextDayOfMonth(ug.apply(UTranslate.dy(h + 2)));
 		drawMonths(ug.apply(UTranslate.dy(2 * h + 3)));

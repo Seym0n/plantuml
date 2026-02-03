@@ -92,7 +92,7 @@ import net.sourceforge.plantuml.skin.Pragma;
 import net.sourceforge.plantuml.style.ISkinParam;
 import net.sourceforge.plantuml.style.SName;
 
-public class GanttPreparedModel implements ToTaskDraw, TimelineStyle {
+public class GanttPreparedModel implements ToTaskDraw {
 
 	// ========================================================================
 	// Value objects
@@ -173,65 +173,6 @@ public class GanttPreparedModel implements ToTaskDraw, TimelineStyle {
 		this.timelineStyle = new TimelineStyleData(ganttStyle, HColorSet.instance());
 	}
 
-	// ========================================================================
-	// TimelineStyle delegation
-	// ========================================================================
-
-	@Override
-	public double getFontSizeDay() {
-		return timelineStyle.getFontSizeDay();
-	}
-
-	@Override
-	public double getFontSizeMonth() {
-		return timelineStyle.getFontSizeMonth();
-	}
-
-	@Override
-	public double getFontSizeYear() {
-		return timelineStyle.getFontSizeYear();
-	}
-
-	@Override
-	public UFont getFont(SName param) {
-		return timelineStyle.getFont(param);
-	}
-
-	@Override
-	public HColor getClosedBackgroundColor() {
-		return timelineStyle.getClosedBackgroundColor();
-	}
-
-	@Override
-	public HColor getClosedFontColor() {
-		return timelineStyle.getClosedFontColor();
-	}
-
-	@Override
-	public HColor getOpenFontColor() {
-		return timelineStyle.getOpenFontColor();
-	}
-
-	@Override
-	public HColor getLineColor() {
-		return timelineStyle.getLineColor();
-	}
-
-	@Override
-	public HColorSet getColorSet() {
-		return timelineStyle.getColorSet();
-	}
-
-	@Override
-	public UGraphic applyVerticalSeparatorStyle(UGraphic ug) {
-		return timelineStyle.applyVerticalSeparatorStyle(ug);
-	}
-
-	@Override
-	public double getCellWidth() {
-		return timelineStyle.getCellWidth();
-	}
-
 	@Override
 	public TaskDraw getTaskDraw(Task task) {
 		return getDrawRegistry().getTaskDraw(task);
@@ -268,36 +209,42 @@ public class GanttPreparedModel implements ToTaskDraw, TimelineStyle {
 	// ========================================================================
 
 	public TimeScale simple() {
-		return new TimeScaleWink(getCellWidth(), getScaleConfig().getEffectiveScale(),
+		return new TimeScaleWink(getTimelineStyle().getCellWidth(), getScaleConfig().getEffectiveScale(),
 				getScaleConfig().getPrintScale());
 	}
 
 	public TimeScale daily() {
 		return getScaleConfig().isHideClosed()
-				? new TimeScaleDailyHideClosed(getCellWidth(), TimePoint.ofStartOfDay(getTimeBounds().getMinDay()),
-						getScaleConfig().getEffectiveScale(), getDayCalendar().getOpenClose())
-				: new TimeScaleDaily(getCellWidth(), TimePoint.ofStartOfDay(getTimeBounds().getMinDay()),
-						getScaleConfig().getEffectiveScale(), getTimeBounds().getPrintStart());
+				? new TimeScaleDailyHideClosed(getTimelineStyle().getCellWidth(),
+						TimePoint.ofStartOfDay(getTimeBounds().getMinDay()), getScaleConfig().getEffectiveScale(),
+						getDayCalendar().getOpenClose())
+				: new TimeScaleDaily(getTimelineStyle().getCellWidth(),
+						TimePoint.ofStartOfDay(getTimeBounds().getMinDay()), getScaleConfig().getEffectiveScale(),
+						getTimeBounds().getPrintStart());
 	}
 
 	public TimeScale weekly() {
-		return new TimeScaleCompressed(getCellWidth(), TimePoint.ofStartOfDay(getTimeBounds().getMinDay()),
-				getScaleConfig().getEffectiveScale(), getTimeBounds().getPrintStart());
+		return new TimeScaleCompressed(getTimelineStyle().getCellWidth(),
+				TimePoint.ofStartOfDay(getTimeBounds().getMinDay()), getScaleConfig().getEffectiveScale(),
+				getTimeBounds().getPrintStart());
 	}
 
 	public TimeScale monthly() {
-		return new TimeScaleCompressed(getCellWidth(), TimePoint.ofStartOfDay(getTimeBounds().getMinDay()),
-				getScaleConfig().getEffectiveScale(), getTimeBounds().getPrintStart());
+		return new TimeScaleCompressed(getTimelineStyle().getCellWidth(),
+				TimePoint.ofStartOfDay(getTimeBounds().getMinDay()), getScaleConfig().getEffectiveScale(),
+				getTimeBounds().getPrintStart());
 	}
 
 	public TimeScale quaterly() {
-		return new TimeScaleCompressed(getCellWidth(), TimePoint.ofStartOfDay(getTimeBounds().getMinDay()),
-				getScaleConfig().getEffectiveScale(), getTimeBounds().getPrintStart());
+		return new TimeScaleCompressed(getTimelineStyle().getCellWidth(),
+				TimePoint.ofStartOfDay(getTimeBounds().getMinDay()), getScaleConfig().getEffectiveScale(),
+				getTimeBounds().getPrintStart());
 	}
 
 	public TimeScale yearly() {
-		return new TimeScaleCompressed(getCellWidth(), TimePoint.ofStartOfDay(getTimeBounds().getMinDay()),
-				getScaleConfig().getEffectiveScale(), getTimeBounds().getPrintStart());
+		return new TimeScaleCompressed(getTimelineStyle().getCellWidth(),
+				TimePoint.ofStartOfDay(getTimeBounds().getMinDay()), getScaleConfig().getEffectiveScale(),
+				getTimeBounds().getPrintStart());
 	}
 
 	// ========================================================================

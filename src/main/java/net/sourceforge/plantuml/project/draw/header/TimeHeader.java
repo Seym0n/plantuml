@@ -90,19 +90,19 @@ public abstract class TimeHeader {
 	}
 
 	protected final HColor closedBackgroundColor() {
-		return model.getClosedBackgroundColor();
+		return model.getTimelineStyle().getClosedBackgroundColor();
 	}
 
 	protected final HColor closedFontColor() {
-		return model.getClosedFontColor();
+		return model.getTimelineStyle().getClosedFontColor();
 	}
 
 	protected final HColor openFontColor() {
-		return model.getOpenFontColor();
+		return model.getTimelineStyle().getOpenFontColor();
 	}
 
 	protected final HColor getLineColor() {
-		return model.getLineColor();
+		return model.getTimelineStyle().getLineColor();
 	}
 
 	public abstract double getTimeHeaderHeight(StringBounder stringBounder);
@@ -139,7 +139,7 @@ public abstract class TimeHeader {
 	}
 
 	protected final TextBlock getTextBlock(SName param, String text, boolean bold, HColor color) {
-		final UFont font = model.getFont(param);
+		final UFont font = model.getTimelineStyle().getFont(param);
 		final FontConfiguration fontConfiguration = getFontConfiguration(font, bold, color);
 		return Display.getWithNewlines(getPragma(), text).create(fontConfiguration, HorizontalAlignment.LEFT,
 				new SpriteContainerEmpty());
@@ -177,7 +177,7 @@ public abstract class TimeHeader {
 	}
 
 	protected void printVerticalSeparators(UGraphic ug, double totalHeightWithoutFooter) {
-		ug = model.applyVerticalSeparatorStyle(ug);
+		ug = model.getTimelineStyle().applyVerticalSeparatorStyle(ug);
 		for (LocalDate day = getMinDay(); day.compareTo(getMaxDay()) <= 0; day = day.plusDays(1)) {
 			final TimePoint wink = TimePoint.ofStartOfDay(day);
 			if (isBold2(wink))

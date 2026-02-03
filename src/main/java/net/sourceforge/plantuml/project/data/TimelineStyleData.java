@@ -41,7 +41,6 @@ import net.sourceforge.plantuml.klimt.color.HColorSet;
 import net.sourceforge.plantuml.klimt.drawing.UGraphic;
 import net.sourceforge.plantuml.klimt.font.UFont;
 import net.sourceforge.plantuml.project.GanttStyle;
-import net.sourceforge.plantuml.project.TimelineStyle;
 import net.sourceforge.plantuml.style.PName;
 import net.sourceforge.plantuml.style.SName;
 import net.sourceforge.plantuml.style.Style;
@@ -49,7 +48,7 @@ import net.sourceforge.plantuml.style.Style;
 /**
  * Value object containing timeline styling information.
  */
-public class TimelineStyleData implements TimelineStyle {
+public class TimelineStyleData {
 
 	private final GanttStyle ganttStyle;
 	private final HColorSet colorSet;
@@ -59,52 +58,42 @@ public class TimelineStyleData implements TimelineStyle {
 		this.colorSet = colorSet;
 	}
 
-	@Override
 	public double getFontSizeDay() {
 		return getStyleDay().value(PName.FontSize).asDouble();
 	}
 
-	@Override
 	public double getFontSizeMonth() {
 		return ganttStyle.getStyle(SName.timeline, SName.month).value(PName.FontSize).asDouble();
 	}
 
-	@Override
 	public double getFontSizeYear() {
 		return ganttStyle.getStyle(SName.timeline, SName.year).value(PName.FontSize).asDouble();
 	}
 
-	@Override
 	public UFont getFont(SName param) {
 		return ganttStyle.getStyle(SName.timeline, param).getUFont();
 	}
 
-	@Override
 	public HColor getClosedBackgroundColor() {
 		return ganttStyle.getStyle(SName.closed).value(PName.BackGroundColor).asColor(colorSet);
 	}
 
-	@Override
 	public HColor getClosedFontColor() {
 		return ganttStyle.getStyle(SName.closed).value(PName.FontColor).asColor(colorSet);
 	}
 
-	@Override
 	public HColor getOpenFontColor() {
 		return ganttStyle.getStyle(SName.timeline).value(PName.FontColor).asColor(colorSet);
 	}
 
-	@Override
 	public HColor getLineColor() {
 		return ganttStyle.getStyle(SName.timeline).value(PName.LineColor).asColor(colorSet);
 	}
 
-	@Override
 	public HColorSet getColorSet() {
 		return colorSet;
 	}
 
-	@Override
 	public UGraphic applyVerticalSeparatorStyle(UGraphic ug) {
 		final Style style = ganttStyle.getStyle(SName.verticalSeparator);
 		final HColor color = style.value(PName.LineColor).asColor(colorSet);
@@ -112,7 +101,6 @@ public class TimelineStyleData implements TimelineStyle {
 		return ug.apply(color).apply(stroke);
 	}
 
-	@Override
 	public double getCellWidth() {
 		final double w = getStyleDay().value(PName.FontSize).asDouble();
 		return w * 1.6;
