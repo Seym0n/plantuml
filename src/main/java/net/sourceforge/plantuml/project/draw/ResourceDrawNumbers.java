@@ -47,7 +47,6 @@ import net.sourceforge.plantuml.klimt.geom.HorizontalAlignment;
 import net.sourceforge.plantuml.klimt.shape.TextBlock;
 import net.sourceforge.plantuml.klimt.shape.ULine;
 import net.sourceforge.plantuml.klimt.sprite.SpriteContainerEmpty;
-import net.sourceforge.plantuml.project.GanttDiagram;
 import net.sourceforge.plantuml.project.GanttPreparedModel;
 import net.sourceforge.plantuml.project.core.Resource;
 import net.sourceforge.plantuml.project.time.TimePoint;
