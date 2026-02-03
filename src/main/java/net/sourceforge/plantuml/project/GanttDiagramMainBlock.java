@@ -76,7 +76,7 @@ public class GanttDiagramMainBlock extends AbstractTextBlock {
 		try {
 			final UGraphic ugOrig = ug;
 
-			if (model.getLabelStrategy().titleInFirstColumn())
+			if (model.getDisplayConfig().getLabelStrategy().titleInFirstColumn())
 				ug = ug.apply(UTranslate.dx(layout.titlesWidth));
 
 			final Style timelineStyle = StyleSignatureBasic
@@ -90,7 +90,7 @@ public class GanttDiagramMainBlock extends AbstractTextBlock {
 
 				final URectangle rect1 = URectangle.build(fullWidth, layout.headerHeight);
 				ug.apply(back.bg()).draw(rect1);
-				if (model.isShowFootbox()) {
+				if (model.getDisplayConfig().isShowFootbox()) {
 					final URectangle rect2 = URectangle.build(fullWidth, layout.footerHeight);
 					ug.apply(back.bg()).apply(UTranslate.dy(model.getTotalHeightWithoutFooter())).draw(rect2);
 				}
@@ -102,10 +102,10 @@ public class GanttDiagramMainBlock extends AbstractTextBlock {
 			drawTasksRect(ug);
 			drawTasksTitle(ugOrig, layout.titlesWidth, layout.barsWidth);
 
-			if (model.isHideResourceFootbox() == false)
+			if (model.getDisplayConfig().isHideResourceFootbox() == false)
 				drawResources(ug);
 
-			if (model.isShowFootbox())
+			if (model.getDisplayConfig().isShowFootbox())
 				timeHeader.drawTimeFooter(ug.apply(UTranslate.dy(model.getTotalHeightWithoutFooter())));
 
 		} catch (Throwable e) {
@@ -158,7 +158,7 @@ public class GanttDiagramMainBlock extends AbstractTextBlock {
 
 			final TaskDraw draw = model.getTaskDraw(task);
 			final UTranslate move = UTranslate.dy(draw.getY(ug.getStringBounder()).getCurrentValue());
-			draw.drawTitle(ug.apply(move), model.getLabelStrategy(), colTitles, colBars);
+			draw.drawTitle(ug.apply(move), model.getDisplayConfig().getLabelStrategy(), colTitles, colBars);
 		}
 	}
 

@@ -36,36 +36,31 @@
 package net.sourceforge.plantuml.project.data;
 
 import net.sourceforge.plantuml.klimt.geom.HorizontalAlignment;
-import net.sourceforge.plantuml.project.DisplayConfig;
 import net.sourceforge.plantuml.project.LabelPosition;
 import net.sourceforge.plantuml.project.LabelStrategy;
 
 /**
  * Value object containing display configuration options.
  */
-public class DisplayConfigData implements DisplayConfig {
+public class DisplayConfigData {
 
 	private LabelStrategy labelStrategy = new LabelStrategy(LabelPosition.LEGACY, HorizontalAlignment.LEFT);
 	private boolean showFootbox = true;
 	private boolean hideResourceName;
 	private boolean hideResourceFootbox;
 
-	@Override
 	public LabelStrategy getLabelStrategy() {
 		return labelStrategy;
 	}
 
-	@Override
 	public boolean isShowFootbox() {
 		return showFootbox;
 	}
 
-	@Override
 	public boolean isHideResourceName() {
 		return hideResourceName;
 	}
 
-	@Override
 	public boolean isHideResourceFootbox() {
 		return hideResourceFootbox;
 	}

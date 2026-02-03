@@ -92,8 +92,7 @@ import net.sourceforge.plantuml.skin.Pragma;
 import net.sourceforge.plantuml.style.ISkinParam;
 import net.sourceforge.plantuml.style.SName;
 
-public class GanttPreparedModel
-		implements ToTaskDraw, DisplayConfig, TimelineStyle, VerticalSeparators, TaskDrawRegistry {
+public class GanttPreparedModel implements ToTaskDraw, TimelineStyle, VerticalSeparators, TaskDrawRegistry {
 
 	// ========================================================================
 	// Value objects
@@ -122,10 +121,6 @@ public class GanttPreparedModel
 		return weekConfig;
 	}
 
-	public DisplayConfigData getDisplayConfig() {
-		return displayConfig;
-	}
-
 	private final DayCalendarData dayCalendar = new DayCalendarData();
 
 	public DayCalendarData getDayCalendar() {
@@ -133,9 +128,23 @@ public class GanttPreparedModel
 	}
 
 	private final DisplayConfigData displayConfig = new DisplayConfigData();
-	private final TimelineStyleData timelineStyle;
+
+	public DisplayConfigData getDisplayConfig() {
+		return displayConfig;
+	}
+
+	public VerticalSeparatorsData getSeparators() {
+		return separators;
+	}
+
+	public TaskDrawRegistryData getDrawRegistry() {
+		return drawRegistry;
+	}
+
 	private final VerticalSeparatorsData separators = new VerticalSeparatorsData();
 	private final TaskDrawRegistryData drawRegistry = new TaskDrawRegistryData();
+
+	private final TimelineStyleData timelineStyle;
 
 	// ========================================================================
 	// Layout / origin (internal, not in value objects)
@@ -157,46 +166,6 @@ public class GanttPreparedModel
 		this.ganttStyle = ganttStyle;
 		this.skinParam = skinParam;
 		this.timelineStyle = new TimelineStyleData(ganttStyle, HColorSet.instance());
-	}
-
-	// ========================================================================
-	// DisplayConfig delegation
-	// ========================================================================
-
-	@Override
-	public LabelStrategy getLabelStrategy() {
-		return displayConfig.getLabelStrategy();
-	}
-
-	@Override
-	public boolean isShowFootbox() {
-		return displayConfig.isShowFootbox();
-	}
-
-	@Override
-	public boolean isHideResourceName() {
-		return displayConfig.isHideResourceName();
-	}
-
-	@Override
-	public boolean isHideResourceFootbox() {
-		return displayConfig.isHideResourceFootbox();
-	}
-
-	public void setLabelStrategy(LabelStrategy labelStrategy) {
-		displayConfig.setLabelStrategy(labelStrategy);
-	}
-
-	public void setShowFootbox(boolean showFootbox) {
-		displayConfig.setShowFootbox(showFootbox);
-	}
-
-	public void setHideResourceName(boolean hideResourceName) {
-		displayConfig.setHideResourceName(hideResourceName);
-	}
-
-	public void setHideResourceFootbox(boolean hideResourceFootbox) {
-		displayConfig.setHideResourceFootbox(hideResourceFootbox);
 	}
 
 	// ========================================================================
@@ -481,7 +450,7 @@ public class GanttPreparedModel
 						getEndForDrawing(taskGroup), task, this, task.getStyleBuilder(), getSkinParam());
 			} else {
 				final TaskImpl taskImpl = (TaskImpl) task;
-				final String display = isHideResourceName() ? taskImpl.getCode().getDisplay()
+				final String display = getDisplayConfig().isHideResourceName() ? taskImpl.getCode().getDisplay()
 						: taskImpl.getPrettyDisplay();
 				if (taskImpl.isDiamond())
 					draw = new TaskDrawDiamond(timeScale, y, display, getStartForDrawing(taskImpl), taskImpl, this,
@@ -502,7 +471,7 @@ public class GanttPreparedModel
 		double yy = lastY(stringBounder);
 		if (yy == 0) {
 			yy = fullHeaderHeight;
-		} else if (isHideResourceFootbox() == false)
+		} else if (getDisplayConfig().isHideResourceFootbox() == false)
 			for (Resource res : getModelData().getResources()) {
 				final ResourceDraw draw = buildResourceDraw(res, timeScale, yy);
 				res.setTaskDraw(draw);

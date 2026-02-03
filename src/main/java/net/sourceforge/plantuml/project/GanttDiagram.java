@@ -509,7 +509,7 @@ public class GanttDiagram extends TitledDiagram implements ToTaskDraw, WithSprit
 	}
 
 	public void setShowFootbox(boolean footbox) {
-		model.setShowFootbox(footbox);
+		model.getDisplayConfig().setShowFootbox(footbox);
 	}
 
 	@Override
@@ -518,7 +518,7 @@ public class GanttDiagram extends TitledDiagram implements ToTaskDraw, WithSprit
 	}
 
 	public void setLabelStrategy(LabelStrategy strategy) {
-		model.setLabelStrategy(strategy);
+		model.getDisplayConfig().setLabelStrategy(strategy);
 	}
 
 	public void setWeeklyHeaderStrategy(WeeklyHeaderStrategy weeklyHeaderStrategy, int weekStartingNumber) {
@@ -527,12 +527,12 @@ public class GanttDiagram extends TitledDiagram implements ToTaskDraw, WithSprit
 	}
 
 	public CommandExecutionResult hideResourceName() {
-		model.setHideResourceName(true);
+		model.getDisplayConfig().setHideResourceName(true);
 		return CommandExecutionResult.ok();
 	}
 
 	public CommandExecutionResult hideResourceFootbox() {
-		model.setHideResourceFootbox(true);
+		model.getDisplayConfig().setHideResourceFootbox(true);
 		return CommandExecutionResult.ok();
 	}
 

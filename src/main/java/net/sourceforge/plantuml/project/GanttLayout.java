@@ -55,7 +55,7 @@ public final class GanttLayout {
 		model.initTaskAndResourceDraws(stringBounder, timeHeader);
 
 		final double computedTitlesWidth;
-		if (model.getLabelStrategy().titleInside()) {
+		if (model.getDisplayConfig().getLabelStrategy().titleInside()) {
 			computedTitlesWidth = 0;
 		} else {
 			double w = 0;
@@ -75,7 +75,7 @@ public final class GanttLayout {
 		this.titlesWidth = computedTitlesWidth;
 		this.barsWidth = getBarsColumnWidth(model, timeHeader);
 		this.headerHeight = timeHeader.getTimeHeaderHeight(stringBounder);
-		this.footerHeight = model.isShowFootbox() ? timeHeader.getTimeFooterHeight(stringBounder) : 0;
+		this.footerHeight = model.getDisplayConfig().isShowFootbox() ? timeHeader.getTimeFooterHeight(stringBounder) : 0;
 		this.totalHeight = model.getTotalHeightWithoutFooter() + this.footerHeight;
 	}
 
