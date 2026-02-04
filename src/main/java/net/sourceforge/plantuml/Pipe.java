@@ -104,6 +104,22 @@ public class Pipe {
 				// Catch any exceptions during diagram processing to prevent termination in pipe mode
 				// This ensures the process continues with the next diagram
 				error.incError();
+
+				// Log error to stderr
+				final PrintStream err = noStdErr == false ? System.err : ps;
+				stdrpt.printInfo(err, null);
+
+				// Output error XMI marker for clients to detect failures
+				ps.println("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
+				ps.println("<XMI xmlns:UML=\"href://org.omg/UML/1.3\" xmi.version=\"1.1\">");
+				ps.println("  <XMI.header>");
+				ps.println("    <XMI.documentation>");
+				ps.println("      <XMI.exporter>PlantUML</XMI.exporter>");
+				ps.println("      <XMI.exporterVersion>ERROR</XMI.exporterVersion>");
+				ps.println("    </XMI.documentation>");
+				ps.println("  </XMI.header>");
+				ps.println("</XMI>");
+
 				if (option.getString(CliFlag.PIPEDELIMITOR) != null)
 					ps.println(option.getString(CliFlag.PIPEDELIMITOR));
 				ps.flush();
