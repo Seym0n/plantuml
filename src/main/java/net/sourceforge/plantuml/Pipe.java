@@ -84,41 +84,38 @@ public class Pipe {
 		final boolean noStdErr = option.isTrue(CliFlag.PIPENOSTDERR);
 
 		for (String source = readFirstDiagram(); source != null; source = readSubsequentDiagram()) {
-			final Defines defines = option.getDefaultDefines();
-			final SFile newCurrentDir = option.getFileDir() == null ? null : new SFile(option.getFileDir());
-			final SourceStringReader sourceStringReader = new SourceStringReader(defines, source, UTF_8,
-					option.getConfig(), newCurrentDir);
+			try {
+				final Defines defines = option.getDefaultDefines();
+				final SFile newCurrentDir = option.getFileDir() == null ? null : new SFile(option.getFileDir());
+				final SourceStringReader sourceStringReader = new SourceStringReader(defines, source, UTF_8,
+						option.getConfig(), newCurrentDir);
 
-			if (option.isTrue(CliFlag.COMPUTE_URL))
-				computeUrlForDiagram(sourceStringReader);
-			else if (option.isTrue(CliFlag.SYNTAX))
-				syntaxCheckDiagram(sourceStringReader, error);
-			else if (option.isTrue(CliFlag.PIPEMAP))
-				createPipeMapForDiagram(sourceStringReader, error);
-			else
-				generateDiagram(sourceStringReader, error, noStdErr);
+				if (option.isTrue(CliFlag.COMPUTE_URL))
+					computeUrlForDiagram(sourceStringReader);
+				else if (option.isTrue(CliFlag.SYNTAX))
+					syntaxCheckDiagram(sourceStringReader, error);
+				else if (option.isTrue(CliFlag.PIPEMAP))
+					createPipeMapForDiagram(sourceStringReader, error);
+				else
+					generateDiagram(sourceStringReader, error, noStdErr);
 
-			ps.flush();
+				ps.flush();
+			} catch (Exception e) {
+				// Catch any exceptions during diagram processing to prevent termination in pipe mode
+				// This ensures the process continues with the next diagram
+				error.incError();
+				if (option.getString(CliFlag.PIPEDELIMITOR) != null)
+					ps.println(option.getString(CliFlag.PIPEDELIMITOR));
+				ps.flush();
+			}
 		}
 	}
 
 	private void generateDiagram(SourceStringReader sourceStringReader, ErrorStatus error, boolean noStdErr)
 			throws IOException {
 		final OutputStream os = noStdErr ? new ByteArrayOutputStream() : ps;
-		DiagramDescription result = null;
-
-		try {
-			result = sourceStringReader.outputImage(os, option.getImageIndex(),
-					option.getFileFormatOption());
-		} catch (Exception e) {
-			// Catch exceptions from diagram generation (including XMI processing errors)
-			// Log the error and continue processing
-			error.incError();
-			printInfo(noStdErr ? ps : System.err, sourceStringReader);
-			if (option.getString(CliFlag.PIPEDELIMITOR) != null)
-				ps.println(option.getString(CliFlag.PIPEDELIMITOR));
-			return;
-		}
+		final DiagramDescription result = sourceStringReader.outputImage(os, option.getImageIndex(),
+				option.getFileFormatOption());
 
 		printInfo(noStdErr ? ps : System.err, sourceStringReader);
 		if (result != null && "(error)".equalsIgnoreCase(result.getDescription())) {
