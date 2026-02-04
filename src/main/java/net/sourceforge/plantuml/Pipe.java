@@ -105,8 +105,20 @@ public class Pipe {
 	private void generateDiagram(SourceStringReader sourceStringReader, ErrorStatus error, boolean noStdErr)
 			throws IOException {
 		final OutputStream os = noStdErr ? new ByteArrayOutputStream() : ps;
-		final DiagramDescription result = sourceStringReader.outputImage(os, option.getImageIndex(),
-				option.getFileFormatOption());
+		DiagramDescription result = null;
+
+		try {
+			result = sourceStringReader.outputImage(os, option.getImageIndex(),
+					option.getFileFormatOption());
+		} catch (Exception e) {
+			// Catch exceptions from diagram generation (including XMI processing errors)
+			// Log the error and continue processing
+			error.incError();
+			printInfo(noStdErr ? ps : System.err, sourceStringReader);
+			if (option.getString(CliFlag.PIPEDELIMITOR) != null)
+				ps.println(option.getString(CliFlag.PIPEDELIMITOR));
+			return;
+		}
 
 		printInfo(noStdErr ? ps : System.err, sourceStringReader);
 		if (result != null && "(error)".equalsIgnoreCase(result.getDescription())) {
