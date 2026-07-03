@@ -84,24 +84,49 @@ public class Pipe {
 		final boolean noStdErr = option.isTrue(CliFlag.PIPENOSTDERR);
 
 		for (String source = readFirstDiagram(); source != null; source = readSubsequentDiagram()) {
-			final Defines defines = option.getDefaultDefines();
-			final SFile newCurrentDir = option.getFileDir() == null ? null : new SFile(option.getFileDir());
-			final SourceStringReader sourceStringReader = new SourceStringReader(defines, source, UTF_8,
-					option.getConfig(), newCurrentDir);
+			try {
+				final Defines defines = option.getDefaultDefines();
+				final SFile newCurrentDir = option.getFileDir() == null ? null : new SFile(option.getFileDir());
+				final SourceStringReader sourceStringReader = new SourceStringReader(defines, source, UTF_8,
+						option.getConfig(), newCurrentDir);
 
-			sourceStringReader.updateStatus(exitStatus);
-			exitStatus.goesHasFiles();
+				sourceStringReader.updateStatus(exitStatus);
+				exitStatus.goesHasFiles();
 
-			if (option.isTrue(CliFlag.COMPUTE_URL))
-				computeUrlForDiagram(sourceStringReader);
-			else if (option.isTrue(CliFlag.SYNTAX))
-				syntaxCheckDiagram(sourceStringReader, exitStatus);
-			else if (option.isTrue(CliFlag.PIPEMAP))
-				createPipeMapForDiagram(sourceStringReader, exitStatus);
-			else
-				generateDiagram(sourceStringReader, exitStatus, noStdErr);
+				if (option.isTrue(CliFlag.COMPUTE_URL))
+					computeUrlForDiagram(sourceStringReader);
+				else if (option.isTrue(CliFlag.SYNTAX))
+					syntaxCheckDiagram(sourceStringReader, exitStatus);
+				else if (option.isTrue(CliFlag.PIPEMAP))
+					createPipeMapForDiagram(sourceStringReader, exitStatus);
+				else
+					generateDiagram(sourceStringReader, exitStatus, noStdErr);
 
-			ps.flush();
+				ps.flush();
+			} catch (Exception e) {
+				// Catch any exceptions during diagram processing to prevent termination in pipe mode
+				// This ensures the process continues with the next diagram
+				exitStatus.goesHasErrors();
+
+				// Log error to stderr
+				final PrintStream err = noStdErr == false ? System.err : ps;
+				stdrpt.printInfo(err, null);
+
+				// Output error XMI marker for clients to detect failures
+				ps.println("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
+				ps.println("<XMI xmlns:UML=\"href://org.omg/UML/1.3\" xmi.version=\"1.1\">");
+				ps.println("  <XMI.header>");
+				ps.println("    <XMI.documentation>");
+				ps.println("      <XMI.exporter>PlantUML</XMI.exporter>");
+				ps.println("      <XMI.exporterVersion>ERROR</XMI.exporterVersion>");
+				ps.println("    </XMI.documentation>");
+				ps.println("  </XMI.header>");
+				ps.println("</XMI>");
+
+				if (option.getString(CliFlag.PIPEDELIMITOR) != null)
+					ps.println(option.getString(CliFlag.PIPEDELIMITOR));
+				ps.flush();
+			}
 		}
 	}
 
