@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - custom-pipe
+      - master
   workflow_dispatch:
 
 defaults:
@@ -59,6 +60,32 @@ jobs:
       - name: Run sample diagram test (ASCII)
         run: |
           echo "Alice -> Bob : it works!" | java -jar plantuml.jar -pipe -ttxt
+
+  release:
+    name: Publish GitHub Release
+    needs: jdk8
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download plantuml.jar
+        uses: actions/download-artifact@v6
+        with:
+          name: plantuml-custom-pipe-jdk8-jar
+          path: dist
+
+      - name: Rename jar with run info
+        run: mv dist/plantuml.jar "dist/plantuml-custom-pipe-${GITHUB_SHA::7}.jar"
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: custom-pipe-${{ github.run_number }}
+          name: Custom Pipe Build ${{ github.run_number }} (${{ github.sha }})
+          target_commitish: ${{ github.sha }}
+          files: dist/plantuml-custom-pipe-*.jar
+          make_latest: true
 
   build_artifacts:
     runs-on: ubuntu-latest
